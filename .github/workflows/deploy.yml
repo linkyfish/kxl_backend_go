@@ -1,0 +1,399 @@
+name: Deploy Go Backend
+
+on:
+  push:
+    tags:
+      - "go-*"
+  workflow_dispatch:
+    inputs:
+      skip_health_check:
+        description: "Skip health check"
+        required: false
+        default: "false"
+        type: boolean
+
+env:
+  REMOTE_DIR: /www/web_project/server/kxl_backend_go
+  REMOTE_TAR: /tmp/kxl_backend_go.tar.gz
+
+jobs:
+  deploy:
+    name: Deploy to Production Server
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-go-prod
+      cancel-in-progress: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: "go.mod"
+          cache: true
+
+      - name: Display deployment info
+        run: |
+          echo "=========================================="
+          echo "Deploying Go Backend"
+          echo "Tag/Ref: ${{ github.ref_name }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Triggered by: ${{ github.actor }}"
+          echo "=========================================="
+
+      - name: Build binary (linux/amd64)
+        run: |
+          set -euo pipefail
+
+          mkdir -p dist
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
+            -trimpath \
+            -ldflags="-s -w" \
+            -o dist/kxl-api \
+            ./cmd/api
+
+          test -f dist/kxl-api
+          chmod +x dist/kxl-api
+
+      - name: Package release files
+        run: |
+          set -euo pipefail
+
+          rm -rf release
+          mkdir -p release
+
+          cp dist/kxl-api release/kxl-api
+          cp -r config templates static release/
+          cp .env.example release/.env.example
+
+          tar -czf kxl_backend_go.tar.gz -C release . || exit_code=$?
+          if [[ ${exit_code:-0} -ge 2 ]]; then
+            echo "tar failed with exit code $exit_code"
+            exit $exit_code
+          fi
+
+          echo "Package created: $(ls -lh kxl_backend_go.tar.gz)"
+
+          # Fail fast if the binary is missing from the package.
+          if ! tar -tzf kxl_backend_go.tar.gz | awk '$0=="./kxl-api"{found=1} END{exit found?0:1}'; then
+            echo "ERROR: ./kxl-api is missing from the deployment package"
+            echo "Top-level entries in tar (first 50):"
+            tar -tzf kxl_backend_go.tar.gz | sed -n '1,50p'
+            exit 1
+          fi
+
+      - name: Install deploy tools (sshpass)
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends openssh-client sshpass
+
+      - name: Upload and deploy on server
+        env:
+          SSH_HOST: ${{ secrets.GO_DEPLOY_HOST }}
+          SSH_PORT: ${{ secrets.GO_DEPLOY_PORT }}
+          SSH_USER: ${{ secrets.GO_DEPLOY_USER }}
+          SSH_PASSWORD: ${{ secrets.GO_DEPLOY_PASSWORD }}
+          SKIP_HEALTH_CHECK: ${{ github.event.inputs.skip_health_check || 'false' }}
+        run: |
+          set -euo pipefail
+
+          : "${SSH_HOST:?Missing secrets.GO_DEPLOY_HOST}"
+          : "${SSH_USER:?Missing secrets.GO_DEPLOY_USER}"
+          : "${SSH_PASSWORD:?Missing secrets.GO_DEPLOY_PASSWORD}"
+          SSH_PORT="${SSH_PORT:-22}"
+
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+
+          echo "[Step 1] Uploading package to server..."
+          sshpass -p "$SSH_PASSWORD" scp \
+            -P "$SSH_PORT" \
+            -o StrictHostKeyChecking=no \
+            kxl_backend_go.tar.gz \
+            "$SSH_USER@$SSH_HOST:$REMOTE_TAR"
+
+          echo "[Step 2] Executing deployment on server..."
+          sshpass -p "$SSH_PASSWORD" ssh \
+            -p "$SSH_PORT" \
+            -o StrictHostKeyChecking=no \
+            "$SSH_USER@$SSH_HOST" \
+            "SKIP_HEALTH_CHECK=$SKIP_HEALTH_CHECK bash -s" <<'EOF'
+          set -euo pipefail
+
+          REMOTE_DIR="/www/web_project/server/kxl_backend_go"
+          REMOTE_TAR="/tmp/kxl_backend_go.tar.gz"
+          BACKUP_DIR="/www/web_project/backups/kxl_backend_go"
+          LOG_DIR="/www/web_project/logs"
+          PERSISTENT_CONFIG_DIR="/www/web_project/configs"
+          PERSISTENT_ENV="$PERSISTENT_CONFIG_DIR/kxl_backend_go.env"
+          PID_FILE="$REMOTE_DIR/kxl_backend_go.pid"
+
+          TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+          LOG_FILE="$LOG_DIR/deploy_go_$TIMESTAMP.log"
+          APP_LOG="$LOG_DIR/kxl_backend_go_app.log"
+
+          # 创建必要目录
+          mkdir -p "$REMOTE_DIR" "$BACKUP_DIR" "$LOG_DIR" "$PERSISTENT_CONFIG_DIR"
+
+          # 开始记录日志
+          exec > >(tee -a "$LOG_FILE") 2>&1
+          echo "=========================================="
+          echo "Go Backend deployment started at $(date)"
+          echo "=========================================="
+
+          # 从 .env / 持久化 env 里读取端口（用于 stop/health check）
+          PORT="8787"
+          if [[ -f "$REMOTE_DIR/.env" ]]; then
+            p=$(grep -E '^SERVER_PORT=' "$REMOTE_DIR/.env" 2>/dev/null | tail -1 | cut -d= -f2- | tr -d '\r' || true)
+            [[ -n "${p:-}" ]] && PORT="$p"
+          elif [[ -f "$PERSISTENT_ENV" ]]; then
+            p=$(grep -E '^SERVER_PORT=' "$PERSISTENT_ENV" 2>/dev/null | tail -1 | cut -d= -f2- | tr -d '\r' || true)
+            [[ -n "${p:-}" ]] && PORT="$p"
+          fi
+
+          # 1. 停止当前运行的服务
+          echo "[Step 1] Stopping current service..."
+
+          if [[ -f "$PID_FILE" ]]; then
+            OLD_PID="$(cat "$PID_FILE" 2>/dev/null || true)"
+            if [[ -n "${OLD_PID:-}" ]] && kill -0 "$OLD_PID" 2>/dev/null; then
+              echo "Stopping process by pid: $OLD_PID"
+              kill "$OLD_PID" 2>/dev/null || true
+              sleep 2
+              kill -9 "$OLD_PID" 2>/dev/null || true
+            fi
+            rm -f "$PID_FILE" 2>/dev/null || true
+          fi
+
+          # 强制清理端口占用
+          if command -v fuser >/dev/null 2>&1; then
+            fuser -k "${PORT}/tcp" 2>/dev/null || true
+          elif command -v lsof >/dev/null 2>&1; then
+            lsof -t -i:"${PORT}" | xargs -r kill -9 2>/dev/null || true
+          fi
+
+          # 尝试按进程名清理（尽量保守）
+          if command -v pkill >/dev/null 2>&1; then
+            pkill -f "$REMOTE_DIR/kxl-api" 2>/dev/null || true
+            pkill -f "kxl-api" 2>/dev/null || true
+          fi
+          sleep 1
+
+          # 2. 备份当前代码和配置
+          echo "[Step 2] Backing up current files..."
+
+          # 单独备份 .env（不依赖旧文件是否存在）
+          if [[ -f "$REMOTE_DIR/.env" ]]; then
+            cp "$REMOTE_DIR/.env" /tmp/.env.backup
+            cp "$REMOTE_DIR/.env" "$PERSISTENT_ENV"
+            echo ".env backed up to /tmp and $PERSISTENT_ENV"
+          else
+            echo "WARNING: No existing .env found in $REMOTE_DIR"
+          fi
+
+          # 备份 uploads（若存在）
+          [[ -d "$REMOTE_DIR/uploads" ]] && cp -r "$REMOTE_DIR/uploads" /tmp/uploads.backup || true
+
+          # 备份当前目录（若之前部署过）
+          if [[ -d "$REMOTE_DIR" ]] && [[ -f "$REMOTE_DIR/kxl-api" ]]; then
+            tar -czf "$BACKUP_DIR/backup_$TIMESTAMP.tar.gz" -C "$(dirname "$REMOTE_DIR")" "$(basename "$REMOTE_DIR")" 2>/dev/null || true
+            echo "Backup created: backup_$TIMESTAMP.tar.gz"
+          fi
+
+          # 2.1 确保端口已释放，再进行删文件+解压
+          echo "[Step 2.1] Verifying port $PORT is free before deploying..."
+          STOP_CHECK_MAX=10
+          for i in $(seq 1 $STOP_CHECK_MAX); do
+            PORT_IN_USE=0
+            if command -v lsof >/dev/null 2>&1; then
+              lsof -i:"$PORT" >/dev/null 2>&1 && PORT_IN_USE=1
+            elif command -v netstat >/dev/null 2>&1; then
+              netstat -tlnp 2>/dev/null | grep -q ":$PORT" && PORT_IN_USE=1
+            elif command -v ss >/dev/null 2>&1; then
+              ss -tlnp 2>/dev/null | grep -q ":$PORT" && PORT_IN_USE=1
+            else
+              echo "WARNING: no lsof/netstat/ss available; skipping port check"
+              break
+            fi
+
+            if [[ $PORT_IN_USE -eq 0 ]]; then
+              echo "Port $PORT is available"
+              break
+            fi
+
+            if [[ $i -eq $STOP_CHECK_MAX ]]; then
+              echo "ERROR: Port $PORT still in use; aborting deployment before modifying files"
+              echo "Processes on port $PORT:"
+              lsof -i:"$PORT" 2>/dev/null || netstat -tlnp 2>/dev/null | grep ":$PORT" || ss -tlnp 2>/dev/null | grep ":$PORT" || true
+              exit 1
+            fi
+
+            echo "Waiting for port $PORT to be released... ($i/${STOP_CHECK_MAX})"
+            sleep 1
+          done
+
+          # 3. 解压新版本
+          echo "[Step 3] Deploying new version..."
+          find "$REMOTE_DIR" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+          tar -xzf "$REMOTE_TAR" -C "$REMOTE_DIR"
+          rm -f "$REMOTE_TAR"
+
+          # 3.1 验证关键文件是否解压成功
+          echo "[Step 3.1] Verifying extracted files..."
+          if [[ ! -f "$REMOTE_DIR/kxl-api" ]]; then
+            echo "ERROR: Missing $REMOTE_DIR/kxl-api after extraction"
+            echo "Listing $REMOTE_DIR (top 100):"
+            ls -la "$REMOTE_DIR" | head -100 || true
+            exit 1
+          fi
+
+          # 4. 恢复重要文件
+          echo "[Step 4] Restoring configuration files..."
+
+          # 恢复 .env（优先级：/tmp 备份 > 持久化备份 > .env.example）
+          if [[ -f /tmp/.env.backup ]]; then
+            mv /tmp/.env.backup "$REMOTE_DIR/.env"
+            echo ".env restored from /tmp backup"
+          elif [[ -f "$PERSISTENT_ENV" ]]; then
+            cp "$PERSISTENT_ENV" "$REMOTE_DIR/.env"
+            echo ".env restored from persistent backup: $PERSISTENT_ENV"
+          elif [[ -f "$REMOTE_DIR/.env.example" ]]; then
+            cp "$REMOTE_DIR/.env.example" "$REMOTE_DIR/.env"
+            echo "WARNING: .env created from .env.example - please configure manually!"
+          else
+            echo "FATAL: No .env source found!"
+            echo "Please create $PERSISTENT_ENV on the server before deployment."
+            echo "Or ensure .env.example exists in the repository."
+            exit 1
+          fi
+
+          # 恢复 uploads
+          [[ -d /tmp/uploads.backup ]] && mv /tmp/uploads.backup "$REMOTE_DIR/uploads" || mkdir -p "$REMOTE_DIR/uploads"
+
+          # 验证 .env 存在
+          if [[ ! -f "$REMOTE_DIR/.env" ]]; then
+            echo "ERROR: .env restoration failed!"
+            exit 1
+          fi
+          echo ".env verified successfully"
+
+          # 5. 设置文件权限
+          echo "[Step 5] Setting file permissions..."
+          chmod +x "$REMOTE_DIR/kxl-api" 2>/dev/null || true
+          chmod -R 755 "$REMOTE_DIR/uploads" 2>/dev/null || true
+          chown -R www:www "$REMOTE_DIR" 2>/dev/null || true
+
+          # 6. 启动服务（守护/后台运行）
+          echo "[Step 6] Starting service (daemon)..."
+
+          # 重新读取端口（以新 .env 为准）
+          p=$(grep -E '^SERVER_PORT=' "$REMOTE_DIR/.env" 2>/dev/null | tail -1 | cut -d= -f2- | tr -d '\r' || true)
+          [[ -n "${p:-}" ]] && PORT="$p"
+
+          cd "$REMOTE_DIR"
+          nohup ./kxl-api >> "$APP_LOG" 2>&1 &
+          NEW_PID=$!
+          echo "$NEW_PID" > "$PID_FILE"
+          sleep 3
+
+          if ! kill -0 "$NEW_PID" 2>/dev/null; then
+            echo "ERROR: service exited right after start (pid=$NEW_PID)"
+            echo "--- Recent app log ---"
+            tail -80 "$APP_LOG" 2>/dev/null || true
+            exit 1
+          fi
+
+          echo "Service started: pid=$NEW_PID, port=$PORT"
+
+          # 7. 健康检查（带重试）
+          if [[ "${SKIP_HEALTH_CHECK:-false}" != "true" ]]; then
+            echo "[Step 7] Health check with retry..."
+            MAX_RETRIES=10
+            RETRY_INTERVAL=3
+            HEALTH_URL="http://127.0.0.1:${PORT}/health"
+
+            for i in $(seq 1 $MAX_RETRIES); do
+              echo "Health check attempt $i/$MAX_RETRIES..."
+              HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$HEALTH_URL" 2>/dev/null || echo "000")
+
+              if [[ "$HTTP_CODE" == "200" ]]; then
+                echo "Health check passed! (HTTP $HTTP_CODE)"
+                break
+              fi
+
+              if [[ $i -eq $MAX_RETRIES ]]; then
+                echo "ERROR: Health check failed after $MAX_RETRIES attempts (HTTP $HTTP_CODE)"
+                echo ""
+                echo "=== Diagnostic Information ==="
+                echo ""
+                echo "--- PID File ---"
+                if [[ -f "$PID_FILE" ]]; then
+                  echo "PID: $(cat "$PID_FILE")"
+                else
+                  echo "PID file does not exist"
+                fi
+                echo ""
+                echo "--- Go Process ---"
+                ps aux | grep -E "kxl-api|kxl_backend_go" | grep -v grep || echo "No go processes found"
+                echo ""
+                echo "--- Port $PORT Status ---"
+                if command -v lsof >/dev/null 2>&1; then
+                  lsof -i:"$PORT" 2>/dev/null || echo "lsof: port $PORT not in use"
+                fi
+                if command -v netstat >/dev/null 2>&1; then
+                  netstat -tlnp 2>/dev/null | grep ":$PORT" || echo "netstat: port $PORT not listening"
+                fi
+                if command -v ss >/dev/null 2>&1; then
+                  ss -tlnp 2>/dev/null | grep ":$PORT" || echo "ss: port $PORT not listening"
+                fi
+                echo ""
+                echo "--- .env Check ---"
+                if [[ -f "$REMOTE_DIR/.env" ]]; then
+                  echo ".env exists, checking key configs (redacted):"
+                  grep -E "^(DB_|REDIS_|APP_|SERVER_)" "$REMOTE_DIR/.env" 2>/dev/null | sed 's/=.*/=***/' || true
+                else
+                  echo "ERROR: .env file missing!"
+                fi
+                echo ""
+                echo "--- Recent App Logs ---"
+                tail -120 "$APP_LOG" 2>/dev/null || echo "No app log available"
+                echo ""
+                echo "=== End Diagnostic Information ==="
+                exit 1
+              fi
+
+              echo "Health check failed (HTTP $HTTP_CODE), retrying in ${RETRY_INTERVAL}s..."
+              sleep $RETRY_INTERVAL
+            done
+          else
+            echo "[Step 7] Skipping health check (SKIP_HEALTH_CHECK=true)"
+          fi
+
+          # 8. 清理旧备份（保留最近 10 个）
+          echo "[Step 8] Cleaning old backups..."
+          cd "$BACKUP_DIR"
+          ls -t backup_*.tar.gz 2>/dev/null | tail -n +11 | xargs -r rm -f || true
+
+          echo "=========================================="
+          echo "Go Backend deployment completed at $(date)"
+          echo "Deployed to: $REMOTE_DIR"
+          echo "Log file: $LOG_FILE"
+          echo "=========================================="
+          EOF
+
+      - name: Deployment summary
+        if: always()
+        run: |
+          echo "=========================================="
+          echo "Deployment Summary"
+          echo "Status: ${{ job.status }}"
+          echo "Tag: ${{ github.ref_name }}"
+          echo "Target: ${{ env.REMOTE_DIR }}"
+          echo "=========================================="
+

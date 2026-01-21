@@ -4,13 +4,14 @@ After=network.target
 
 [Service]
 Type=simple
-WorkingDirectory=/opt/kxl_backend_go
-ExecStart=/opt/kxl_backend_go/kxl-api
+WorkingDirectory=/www/web_project/server/kxl_backend_go
+ExecStart=/www/web_project/server/kxl_backend_go/kxl-api
 Restart=always
 RestartSec=3
 
 # Environment configuration (recommended)
-EnvironmentFile=-/etc/kxl_backend_go.env
+# (如果你使用本仓库提供的 GitHub Actions 部署脚本，建议将 env 持久化到该路径)
+EnvironmentFile=-/www/web_project/configs/kxl_backend_go.env
 
 # Basic hardening
 NoNewPrivileges=true
@@ -18,4 +19,3 @@ PrivateTmp=true
 
 [Install]
 WantedBy=multi-user.target
-
