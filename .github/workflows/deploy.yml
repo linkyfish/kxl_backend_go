@@ -171,17 +171,17 @@ jobs:
             rm -f "$PID_FILE" 2>/dev/null || true
           fi
 
-          # 强制清理端口占用
-          if command -v fuser >/dev/null 2>&1; then
-            fuser -k "${PORT}/tcp" 2>/dev/null || true
-          elif command -v lsof >/dev/null 2>&1; then
-            lsof -t -i:"${PORT}" | xargs -r kill -9 2>/dev/null || true
-          fi
-
-          # 尝试按进程名清理（尽量保守）
-          if command -v pkill >/dev/null 2>&1; then
-            pkill -f "$REMOTE_DIR/kxl-api" 2>/dev/null || true
-            pkill -f "kxl-api" 2>/dev/null || true
+          # 只清理“本服务”占用的端口，避免误杀其它后端（例如 PHP/Rust）
+          if command -v lsof >/dev/null 2>&1; then
+            for pid in $(lsof -t -iTCP:"$PORT" -sTCP:LISTEN 2>/dev/null | sort -u); do
+              exe="$(readlink -f "/proc/$pid/exe" 2>/dev/null || true)"
+              if [[ "$exe" == "$REMOTE_DIR/kxl-api" ]]; then
+                echo "Killing old kxl-api on port $PORT: pid=$pid exe=$exe"
+                kill -9 "$pid" 2>/dev/null || true
+              else
+                echo "Port $PORT is in use by a different process; will not kill: pid=$pid exe=$exe"
+              fi
+            done
           fi
           sleep 1
 
@@ -396,4 +396,3 @@ jobs:
           echo "Tag: ${{ github.ref_name }}"
           echo "Target: ${{ env.REMOTE_DIR }}"
           echo "=========================================="
-
