@@ -217,11 +217,12 @@ jobs:
           # 2. 备份当前代码和配置
           echo "[Step 2] Backing up current files..."
 
-          # 单独备份 .env（不依赖旧文件是否存在）
+          # 单独备份旧 .env（不依赖旧文件是否存在）
+          # 注意：本工作流会优先使用本次上传到 $PERSISTENT_ENV 的配置，
+          # 所以这里的备份仅用于应急回滚，不应覆盖 $PERSISTENT_ENV。
           if [[ -f "$REMOTE_DIR/.env" ]]; then
             cp "$REMOTE_DIR/.env" /tmp/.env.backup
-            cp "$REMOTE_DIR/.env" "$PERSISTENT_ENV"
-            echo ".env backed up to /tmp and $PERSISTENT_ENV"
+            echo ".env backed up to /tmp"
           else
             echo "WARNING: No existing .env found in $REMOTE_DIR"
           fi
@@ -285,13 +286,13 @@ jobs:
           # 4. 恢复重要文件
           echo "[Step 4] Restoring configuration files..."
 
-          # 恢复 .env（优先级：/tmp 备份 > 持久化备份 > .env.example）
-          if [[ -f /tmp/.env.backup ]]; then
-            mv /tmp/.env.backup "$REMOTE_DIR/.env"
-            echo ".env restored from /tmp backup"
-          elif [[ -f "$PERSISTENT_ENV" ]]; then
+          # 恢复 .env（优先级：持久化备份(secrets) > /tmp 备份 > .env.example）
+          if [[ -f "$PERSISTENT_ENV" ]]; then
             cp "$PERSISTENT_ENV" "$REMOTE_DIR/.env"
             echo ".env restored from persistent backup: $PERSISTENT_ENV"
+          elif [[ -f /tmp/.env.backup ]]; then
+            mv /tmp/.env.backup "$REMOTE_DIR/.env"
+            echo ".env restored from /tmp backup"
           elif [[ -f "$REMOTE_DIR/.env.example" ]]; then
             cp "$REMOTE_DIR/.env.example" "$REMOTE_DIR/.env"
             echo "WARNING: .env created from .env.example - please configure manually!"
