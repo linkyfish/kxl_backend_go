@@ -7,7 +7,7 @@ server:
   port: 8787
 
 database:
-  url: postgres://postgres:postgres@127.0.0.1:5432/kxl
+  url: "postgres://postgres:postgres@127.0.0.1:5432/kxl"
   host: 127.0.0.1
   port: 5432
   name: kxl
@@ -16,7 +16,7 @@ database:
   max_connections: 10
 
 redis:
-  url: redis://127.0.0.1:6379
+  url: "redis://127.0.0.1:6379"
   host: 127.0.0.1
   port: 6379
   password: ""
@@ -26,7 +26,7 @@ session:
   user_cookie_name: kxl_user_session
   admin_cookie_name: kxl_admin_session
   cookie_secure: false
-  prefix: kxl_session:
+  prefix: "kxl_session:"
   user_ttl_seconds: 604800
   admin_ttl_seconds: 7200
 
@@ -44,4 +44,3 @@ uploads:
 
 cors:
   allow_origin: "*"
-
