@@ -1,0 +1,96 @@
+<!-- 分页组件 -->
+{% if pagination and pagination.total_pages > 1 %}
+<nav aria-label="分页导航" class="flex items-center justify-center gap-2 mt-8">
+  <!-- 上一页 -->
+  {% if pagination.current_page > 1 %}
+    <a
+      href="{{ pagination.base_url }}?page={{ pagination.current_page - 1 }}{% if pagination.query %}&{{ pagination.query }}{% endif %}"
+      class="flex items-center gap-1 px-3 py-2 text-sm text-secondary hover:text-primary hover:bg-gray-50 rounded-lg transition-colors"
+    >
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+      </svg>
+      上一页
+    </a>
+  {% else %}
+    <span class="flex items-center gap-1 px-3 py-2 text-sm text-tertiary cursor-not-allowed">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+      </svg>
+      上一页
+    </span>
+  {% endif %}
+
+  <!-- 页码 -->
+  <div class="flex items-center gap-1">
+    {% set start_page = pagination.current_page - 2 %}
+    {% if start_page < 1 %}{% set start_page = 1 %}{% endif %}
+    {% set end_page = pagination.current_page + 2 %}
+    {% if end_page > pagination.total_pages %}{% set end_page = pagination.total_pages %}{% endif %}
+
+    {% if start_page > 1 %}
+      <a
+        href="{{ pagination.base_url }}?page=1{% if pagination.query %}&{{ pagination.query }}{% endif %}"
+        class="w-10 h-10 flex items-center justify-center text-sm text-secondary hover:text-primary hover:bg-gray-50 rounded-lg transition-colors"
+      >
+        1
+      </a>
+      {% if start_page > 2 %}
+        <span class="w-10 h-10 flex items-center justify-center text-tertiary">...</span>
+      {% endif %}
+    {% endif %}
+
+    {% for page in range(start_page, end_page + 1) %}
+      {% if page == pagination.current_page %}
+        <span class="w-10 h-10 flex items-center justify-center text-sm font-medium text-white bg-primary rounded-lg">
+          {{ page }}
+        </span>
+      {% else %}
+        <a
+          href="{{ pagination.base_url }}?page={{ page }}{% if pagination.query %}&{{ pagination.query }}{% endif %}"
+          class="w-10 h-10 flex items-center justify-center text-sm text-secondary hover:text-primary hover:bg-gray-50 rounded-lg transition-colors"
+        >
+          {{ page }}
+        </a>
+      {% endif %}
+    {% endfor %}
+
+    {% if end_page < pagination.total_pages %}
+      {% if end_page < pagination.total_pages - 1 %}
+        <span class="w-10 h-10 flex items-center justify-center text-tertiary">...</span>
+      {% endif %}
+      <a
+        href="{{ pagination.base_url }}?page={{ pagination.total_pages }}{% if pagination.query %}&{{ pagination.query }}{% endif %}"
+        class="w-10 h-10 flex items-center justify-center text-sm text-secondary hover:text-primary hover:bg-gray-50 rounded-lg transition-colors"
+      >
+        {{ pagination.total_pages }}
+      </a>
+    {% endif %}
+  </div>
+
+  <!-- 下一页 -->
+  {% if pagination.current_page < pagination.total_pages %}
+    <a
+      href="{{ pagination.base_url }}?page={{ pagination.current_page + 1 }}{% if pagination.query %}&{{ pagination.query }}{% endif %}"
+      class="flex items-center gap-1 px-3 py-2 text-sm text-secondary hover:text-primary hover:bg-gray-50 rounded-lg transition-colors"
+    >
+      下一页
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+      </svg>
+    </a>
+  {% else %}
+    <span class="flex items-center gap-1 px-3 py-2 text-sm text-tertiary cursor-not-allowed">
+      下一页
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+      </svg>
+    </span>
+  {% endif %}
+</nav>
+
+<!-- 分页信息 -->
+<p class="text-center text-sm text-tertiary mt-4">
+  共 {{ pagination.total_items }} 条记录，第 {{ pagination.current_page }}/{{ pagination.total_pages }} 页
+</p>
+{% endif %}

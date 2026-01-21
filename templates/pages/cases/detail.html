@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- 案例头部 -->
+<section class="bg-gradient-to-br from-gray-900 via-gray-800 to-emerald-900 py-16 md:py-20">
+  <div class="container-custom">
+    {% include "components/breadcrumb.html" %}
+
+    <div class="grid lg:grid-cols-2 gap-12 items-center">
+      <div>
+        {% if case.category and case.category %}
+          <span class="badge badge-primary mb-4" data-aos="fade-up">{{ case.category.name }}</span>
+        {% endif %}
+
+        <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4" data-aos="fade-up" data-aos-delay="100">
+          {{ case.client_name }}
+        </h1>
+
+        <p class="text-lg text-gray-300" data-aos="fade-up" data-aos-delay="300">
+          {{ case.summary | truncate_text:200 }}
+        </p>
+      </div>
+
+      <div class="relative" data-aos="fade-left">
+        {% if case.cover_image %}
+          <img src="{{ case.cover_image }}" alt="{{ case.client_name }}" class="rounded-2xl shadow-2xl w-full">
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 成果数据 -->
+{% if case.results and case.results and case.results %}
+  <section class="bg-white py-12 border-b">
+    <div class="container-custom">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+        {% for result in case.results %}
+          <div class="text-center" data-aos="fade-up" data-aos-delay="{{ forloop.Counter0 * 100 }}">
+            <p class="text-3xl md:text-4xl font-bold text-primary mb-2">{{ result.value |default:"" }}</p>
+            <p class="text-secondary">{{ result.label |default:"" }}</p>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+{% endif %}
+
+<!-- 案例内容 -->
+<section class="section">
+  <div class="container-custom max-w-4xl">
+    <!-- 项目背景 -->
+    {% if case.background %}
+      <div class="mb-12" data-aos="fade-up">
+        <h2 class="text-2xl font-bold mb-4">项目背景</h2>
+        <div class="prose prose-lg max-w-none">
+          {{ case.background | safe }}
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- 解决方案 -->
+    {% if case.solution %}
+      <div class="mb-12" data-aos="fade-up">
+        <h2 class="text-2xl font-bold mb-4">解决方案</h2>
+        <div class="prose prose-lg max-w-none">
+          {{ case.solution | safe }}
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- 客户评价 -->
+    {% if case.testimonial %}
+      <div class="bg-primary-50 rounded-2xl p-8 mt-12" data-aos="fade-up">
+        <svg class="w-12 h-12 text-primary mb-4" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/>
+        </svg>
+        <blockquote class="text-lg text-secondary italic mb-4">
+          "{{ case.testimonial }}"
+        </blockquote>
+        {% if case.testimonial_author %}
+          <p class="font-semibold">{{ case.testimonial_author }}</p>
+          {% if case.testimonial_title %}
+            <p class="text-sm text-tertiary">{{ case.testimonial_title }}</p>
+          {% endif %}
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<!-- 相关产品 -->
+{% if case.related_projects and case.related_projects | length > 0 %}
+  <section class="section bg-secondary">
+    <div class="container-custom">
+      <h2 class="text-2xl font-bold mb-8" data-aos="fade-up">使用的产品</h2>
+      <div class="grid-cards">
+        {% for project in case.related_projects %}
+          {% include "components/project-card.html" %}
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+{% endif %}
+
+<!-- CTA -->
+<section class="bg-primary py-12">
+  <div class="container-custom text-center">
+    <h2 class="text-2xl font-bold text-white mb-4" data-aos="fade-up">想要类似的解决方案？</h2>
+    <p class="text-white/80 mb-6" data-aos="fade-up" data-aos-delay="100">
+      联系我们，了解如何为您的企业定制解决方案
+    </p>
+    <a href="/contact" class="btn bg-white text-primary hover:bg-gray-100" data-aos="fade-up" data-aos-delay="200">
+      立即咨询
+    </a>
+  </div>
+</section>
+{% endblock %}

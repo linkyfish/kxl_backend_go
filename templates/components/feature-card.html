@@ -1,0 +1,21 @@
+<!-- 特色/优势卡片组件 -->
+{# 使用方式: include "components/feature-card.html" #}
+<!-- 需要传入变量: feature (包含 icon, title, description) -->
+<div class="card-feature" data-aos="fade-up" data-aos-delay="{{ forloop.Counter0 * 100 |default:0 }}">
+  <!-- 图标 -->
+  <div class="card-feature-icon">
+    {% if feature.icon %}
+      <img src="{{ feature.icon }}" alt="" class="w-8 h-8">
+    {% else %}
+      <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+      </svg>
+    {% endif %}
+  </div>
+
+  <!-- 标题 -->
+  <h3 class="card-feature-title">{{ feature.title }}</h3>
+
+  <!-- 描述 -->
+  <p class="card-feature-desc">{{ feature.description }}</p>
+</div>

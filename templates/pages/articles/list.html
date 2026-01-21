@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- 页面头部 -->
+<section class="bg-gradient-to-br from-gray-900 via-gray-800 to-emerald-900 py-16 md:py-20">
+  <div class="container-custom">
+    {% include "components/breadcrumb.html" %}
+
+    <h1 class="text-3xl md:text-4xl font-bold text-white mb-4" data-aos="fade-up">
+      新闻动态
+    </h1>
+    <p class="text-lg text-gray-300 max-w-2xl" data-aos="fade-up" data-aos-delay="100">
+      了解我们的最新动态、行业资讯和技术分享
+    </p>
+  </div>
+</section>
+
+<!-- 筛选区域 -->
+<section class="bg-white border-b sticky top-16 z-30">
+  <div class="container-custom py-4">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <!-- 分类筛选 -->
+      {% if categories and categories | length > 0 %}
+        <div class="flex flex-wrap gap-2">
+          <a href="/articles" class="px-4 py-2 rounded-full text-sm font-medium transition-colors {% if not current_category %}bg-primary text-white{% else %}bg-gray-100 text-secondary hover:bg-gray-200{% endif %}">
+            全部
+          </a>
+          {% for cat in categories %}
+            <a href="/articles?category={{ cat.id }}" class="px-4 py-2 rounded-full text-sm font-medium transition-colors {% if current_category == cat.id %}bg-primary text-white{% else %}bg-gray-100 text-secondary hover:bg-gray-200{% endif %}">
+              {{ cat.name }}
+            </a>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <!-- 视图切换按钮 -->
+      <div class="flex items-center gap-2">
+        <span class="text-sm text-tertiary hidden sm:inline">视图：</span>
+        <a href="/articles{% if current_category %}?category={{ current_category }}{% endif %}" class="w-9 h-9 rounded-lg flex items-center justify-center transition-colors {% if current_view != 'list' %}bg-primary text-white{% else %}bg-gray-100 text-secondary hover:bg-gray-200{% endif %}" title="网格视图">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+          </svg>
+        </a>
+        <a href="/articles?view=list{% if current_category %}&category={{ current_category }}{% endif %}" class="w-9 h-9 rounded-lg flex items-center justify-center transition-colors {% if current_view == 'list' %}bg-primary text-white{% else %}bg-gray-100 text-secondary hover:bg-gray-200{% endif %}" title="列表视图">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 热门文章推荐 -->
+{% if hot_articles and hot_articles | length > 0 %}
+<section class="bg-gray-50 py-6 border-b">
+  <div class="container-custom">
+    <div class="flex items-center gap-4 mb-4">
+      <span class="text-primary font-semibold flex items-center gap-2">
+        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z"></path>
+        </svg>
+        热门文章
+      </span>
+    </div>
+    <div class="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 hide-scrollbar">
+      {% for hot in hot_articles %}
+        <a href="/articles/{{ hot.id }}" class="flex-shrink-0 w-72 bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+          <div class="flex gap-4">
+            {% if hot.cover_image and hot.cover_image %}
+              <img src="{{ hot.cover_image }}" alt="{{ hot.title }}" class="w-20 h-20 rounded-lg object-cover flex-shrink-0">
+            {% else %}
+              <div class="w-20 h-20 rounded-lg bg-primary-50 flex items-center justify-center flex-shrink-0">
+                <svg class="w-8 h-8 text-primary-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9.5a2 2 0 00-2-2h-2"></path>
+                </svg>
+              </div>
+            {% endif %}
+            <div class="min-w-0 flex-1">
+              <h4 class="font-medium line-clamp-2 text-sm mb-1 hover:text-primary transition-colors">{{ hot.title }}</h4>
+              <p class="text-xs text-tertiary">{{ hot.view_count |default:0 }} 阅读</p>
+            </div>
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% else %}
+<!-- 默认热门文章占位 -->
+<section class="bg-gray-50 py-6 border-b">
+  <div class="container-custom">
+    <div class="flex items-center gap-4 mb-4">
+      <span class="text-primary font-semibold flex items-center gap-2">
+        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z"></path>
+        </svg>
+        推荐阅读
+      </span>
+    </div>
+    <div class="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 hide-scrollbar">
+      <div class="flex-shrink-0 w-72 bg-white rounded-xl p-4 shadow-sm">
+        <div class="flex gap-4">
+          <div class="w-20 h-20 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+            <svg class="w-8 h-8 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+            </svg>
+          </div>
+          <div class="min-w-0 flex-1">
+            <h4 class="font-medium line-clamp-2 text-sm mb-1">数字化转型的最佳实践</h4>
+            <p class="text-xs text-tertiary">行业洞察</p>
+          </div>
+        </div>
+      </div>
+      <div class="flex-shrink-0 w-72 bg-white rounded-xl p-4 shadow-sm">
+        <div class="flex gap-4">
+          <div class="w-20 h-20 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0">
+            <svg class="w-8 h-8 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+            </svg>
+          </div>
+          <div class="min-w-0 flex-1">
+            <h4 class="font-medium line-clamp-2 text-sm mb-1">现代软件架构设计原则</h4>
+            <p class="text-xs text-tertiary">技术分享</p>
+          </div>
+        </div>
+      </div>
+      <div class="flex-shrink-0 w-72 bg-white rounded-xl p-4 shadow-sm">
+        <div class="flex gap-4">
+          <div class="w-20 h-20 rounded-lg bg-purple-50 flex items-center justify-center flex-shrink-0">
+            <svg class="w-8 h-8 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+            </svg>
+          </div>
+          <div class="min-w-0 flex-1">
+            <h4 class="font-medium line-clamp-2 text-sm mb-1">AI 技术在企业应用中的落地</h4>
+            <p class="text-xs text-tertiary">前沿技术</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- 文章列表 -->
+<section class="section">
+  <div class="container-custom">
+    {% if articles and articles | length > 0 %}
+      {% if current_view == 'list' %}
+        <!-- 列表视图 -->
+        <div class="space-y-6">
+          {% for article in articles %}
+            <a href="/articles/{{ article.id }}" class="card-tech flex flex-col md:flex-row gap-6 group" data-aos="fade-up" data-aos-delay="{{ forloop.Counter0 * 50 }}">
+              {% if article.cover_image and article.cover_image %}
+                <div class="md:w-64 flex-shrink-0">
+                  <img src="{{ article.cover_image }}" alt="{{ article.title }}" class="w-full h-40 md:h-full object-cover rounded-lg">
+                </div>
+              {% endif %}
+              <div class="flex-1 flex flex-col">
+                {% if article.category and article.category %}
+                  <span class="text-xs text-primary font-medium mb-2">{{ article.category.name }}</span>
+                {% endif %}
+                <h3 class="text-xl font-bold mb-2 group-hover:text-primary transition-colors">{{ article.title }}</h3>
+                <p class="text-secondary mb-4 line-clamp-2 flex-1">{{ article.summary |default:"" | truncate_text:200 }}</p>
+                <div class="flex items-center gap-4 text-sm text-tertiary">
+                  <time>{{ article.published_at |default:article.created_at | format_date:"%Y-%m-%d" }}</time>
+                  {% if article.view_count %}
+                    <span>{{ article.view_count }} 阅读</span>
+                  {% endif %}
+                </div>
+              </div>
+            </a>
+          {% endfor %}
+        </div>
+      {% else %}
+        <!-- 网格视图（默认） -->
+        <div class="grid-cards">
+          {% for article in articles %}
+            {% include "components/article-card.html" %}
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      {% include "components/pagination.html" %}
+    {% else %}
+      <!-- 当没有文章时，显示示例展示 -->
+      <div class="text-center mb-8">
+        <p class="text-secondary">暂无文章数据，以下为示例展示</p>
+      </div>
+      <div class="grid-cards">
+        <!-- 示例文章卡片 1 -->
+        <div class="card-tech overflow-hidden group" data-aos="fade-up">
+          <div class="aspect-video bg-gradient-to-br from-blue-100 to-blue-200 relative overflow-hidden">
+            <div class="absolute inset-0 flex items-center justify-center">
+              <svg class="w-16 h-16 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+              </svg>
+            </div>
+          </div>
+          <div class="p-6">
+            <span class="text-xs text-primary font-medium mb-2 block">行业洞察</span>
+            <h3 class="text-lg font-bold mb-2 group-hover:text-primary transition-colors">数字化转型：企业成功的关键要素</h3>
+            <p class="text-sm text-secondary line-clamp-2 mb-4">探讨企业在数字化转型过程中需要关注的核心要素和成功案例分析。</p>
+            <time class="text-xs text-tertiary">2024-01-15</time>
+          </div>
+        </div>
+
+        <!-- 示例文章卡片 2 -->
+        <div class="card-tech overflow-hidden group" data-aos="fade-up" data-aos-delay="100">
+          <div class="aspect-video bg-gradient-to-br from-green-100 to-green-200 relative overflow-hidden">
+            <div class="absolute inset-0 flex items-center justify-center">
+              <svg class="w-16 h-16 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+              </svg>
+            </div>
+          </div>
+          <div class="p-6">
+            <span class="text-xs text-primary font-medium mb-2 block">技术分享</span>
+            <h3 class="text-lg font-bold mb-2 group-hover:text-primary transition-colors">微服务架构最佳实践指南</h3>
+            <p class="text-sm text-secondary line-clamp-2 mb-4">深入解析微服务架构的设计原则、实施步骤和常见问题解决方案。</p>
+            <time class="text-xs text-tertiary">2024-01-10</time>
+          </div>
+        </div>
+
+        <!-- 示例文章卡片 3 -->
+        <div class="card-tech overflow-hidden group" data-aos="fade-up" data-aos-delay="200">
+          <div class="aspect-video bg-gradient-to-br from-purple-100 to-purple-200 relative overflow-hidden">
+            <div class="absolute inset-0 flex items-center justify-center">
+              <svg class="w-16 h-16 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+              </svg>
+            </div>
+          </div>
+          <div class="p-6">
+            <span class="text-xs text-primary font-medium mb-2 block">公司动态</span>
+            <h3 class="text-lg font-bold mb-2 group-hover:text-primary transition-colors">我们通过 ISO 27001 信息安全认证</h3>
+            <p class="text-sm text-secondary line-clamp-2 mb-4">公司正式通过国际信息安全管理体系认证，为客户提供更安全可靠的服务。</p>
+            <time class="text-xs text-tertiary">2024-01-05</time>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<!-- 订阅区块 -->
+<section class="bg-gradient-to-r from-primary to-emerald-600 py-16">
+  <div class="container-custom text-center">
+    <div class="max-w-2xl mx-auto">
+      <h2 class="text-2xl md:text-3xl font-bold text-white mb-4" data-aos="fade-up">
+        订阅我们的动态
+      </h2>
+      <p class="text-white/80 mb-8" data-aos="fade-up" data-aos-delay="100">
+        第一时间获取行业资讯、技术分享和公司动态
+      </p>
+      <form class="flex flex-col sm:flex-row gap-4 justify-center" data-aos="fade-up" data-aos-delay="200">
+        <input
+          type="email"
+          placeholder="输入您的邮箱地址"
+          class="px-6 py-3 rounded-full border-0 focus:ring-2 focus:ring-white/50 w-full sm:w-80 text-gray-900"
+          required
+        >
+        <button type="submit" class="btn bg-white text-primary hover:bg-gray-100 px-8 rounded-full">
+          立即订阅
+        </button>
+      </form>
+      <p class="text-sm text-white/60 mt-4" data-aos="fade-up" data-aos-delay="300">
+        我们承诺不会发送垃圾邮件，您可以随时取消订阅
+      </p>
+    </div>
+  </div>
+</section>
+{% endblock %}

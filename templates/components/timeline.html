@@ -1,0 +1,44 @@
+<!-- 时间线组件 -->
+{# 使用方式: include "components/timeline.html" #}
+<!-- 需要传入变量: items (包含 year/date, title, description) -->
+<div class="relative">
+  <!-- 中心线 -->
+  <div class="absolute left-4 md:left-1/2 top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary via-primary-300 to-primary-100 transform md:-translate-x-1/2"></div>
+
+  <!-- 时间线项目 -->
+  <div class="space-y-8 md:space-y-12">
+    {% for item in items %}
+      <div
+        class="relative flex flex-col md:flex-row items-start md:items-center {% if forloop.Counter % 2 == 1 %}md:flex-row-reverse{% endif %}"
+        data-aos="fade-{% if forloop.Counter % 2 == 1 %}left{% else %}right{% endif %}"
+        data-aos-delay="{{ forloop.Counter0 * 100 }}"
+      >
+        <!-- 时间点 -->
+        <div class="absolute left-4 md:left-1/2 w-4 h-4 bg-primary rounded-full transform -translate-x-1/2 ring-4 ring-white shadow-glow z-10"></div>
+
+        <!-- 内容卡片 -->
+        <div class="ml-12 md:ml-0 md:w-5/12 {% if forloop.Counter % 2 == 1 %}md:pr-12{% else %}md:pl-12{% endif %}">
+          <div class="card-tech">
+            <!-- 年份/日期 -->
+            <span class="text-sm font-semibold text-primary mb-2 block">
+              {{ item.year |default:item.date }}
+            </span>
+
+            <!-- 标题 -->
+            <h3 class="text-lg font-semibold mb-2">{{ item.title }}</h3>
+
+            <!-- 描述 -->
+            {% if item.description %}
+              <p class="text-secondary text-sm">{{ item.description }}</p>
+            {% endif %}
+
+            <!-- 图片（可选） -->
+            {% if item.image %}
+              <img src="{{ item.image }}" alt="{{ item.title }}" class="mt-4 rounded-lg">
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>

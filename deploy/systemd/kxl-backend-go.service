@@ -1,0 +1,21 @@
+[Unit]
+Description=KXL Backend Go (Echo)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/kxl_backend_go
+ExecStart=/opt/kxl_backend_go/kxl-api
+Restart=always
+RestartSec=3
+
+# Environment configuration (recommended)
+EnvironmentFile=-/etc/kxl_backend_go.env
+
+# Basic hardening
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
+

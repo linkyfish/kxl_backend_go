@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- 项目头部 -->
+<section class="bg-gradient-to-br from-gray-900 via-gray-800 to-emerald-900 py-16 md:py-20">
+  <div class="container-custom">
+    {% include "components/breadcrumb.html" %}
+
+    <div class="grid lg:grid-cols-2 gap-12 items-center">
+      <!-- 左侧信息 -->
+      <div>
+        {% if project.category %}
+          <span class="badge badge-primary mb-4" data-aos="fade-up">{{ project.category.name }}</span>
+        {% endif %}
+
+        <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4" data-aos="fade-up" data-aos-delay="100">
+          {{ project.name }}
+        </h1>
+
+        <p class="text-lg text-gray-300 mb-6" data-aos="fade-up" data-aos-delay="200">
+          {{ project.brief |default:project.description | truncate_text:200 }}
+        </p>
+
+        {% if project.tags and project.tags | length > 0 %}
+          <div class="flex flex-wrap gap-2 mb-8" data-aos="fade-up" data-aos-delay="300">
+            {% for tag in project.tags %}
+              <span class="px-3 py-1 bg-white/10 text-white/80 rounded-full text-sm">
+                {{ tag.name }}
+              </span>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        <div class="flex flex-wrap gap-4" data-aos="fade-up" data-aos-delay="400">
+          {% if project.demo_url %}
+            <a href="{{ project.demo_url }}" target="_blank" rel="noopener" class="btn btn-primary">
+              在线演示
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+              </svg>
+            </a>
+          {% endif %}
+          <a href="/contact?project={{ project.id }}" class="btn btn-outline-light">
+            咨询定制
+          </a>
+        </div>
+      </div>
+
+      <!-- 右侧图片 -->
+      <div class="relative" data-aos="fade-left">
+        {% if project.cover_image %}
+          <img
+            src="{{ project.cover_image }}"
+            alt="{{ project.name }}"
+            class="rounded-2xl shadow-2xl w-full"
+          >
+        {% else %}
+          <div class="aspect-video bg-gradient-to-br from-primary-100 to-primary-200 rounded-2xl flex items-center justify-center">
+            <svg class="w-24 h-24 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+            </svg>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Tab 导航 -->
+<section class="bg-white border-b sticky top-16 z-30">
+  <div class="container-custom">
+    <div data-tabs data-tab-list class="flex gap-8 overflow-x-auto hide-scrollbar -mb-px">
+      <button data-tab="features" class="py-4 text-sm font-medium border-b-2 border-transparent text-secondary hover:text-primary transition-colors whitespace-nowrap active">
+        功能介绍
+      </button>
+      {% if project.media and project.media | length > 0 %}
+        <button data-tab="gallery" class="py-4 text-sm font-medium border-b-2 border-transparent text-secondary hover:text-primary transition-colors whitespace-nowrap">
+          产品截图
+        </button>
+      {% endif %}
+      {% if project.video_url %}
+        <button data-tab="video" class="py-4 text-sm font-medium border-b-2 border-transparent text-secondary hover:text-primary transition-colors whitespace-nowrap">
+          视频演示
+        </button>
+      {% endif %}
+      {% if project.versions and project.versions | length > 0 %}
+        <button data-tab="versions" class="py-4 text-sm font-medium border-b-2 border-transparent text-secondary hover:text-primary transition-colors whitespace-nowrap">
+          版本历史
+        </button>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<!-- Tab 内容 -->
+<section class="section">
+  <div class="container-custom">
+    <!-- 功能介绍 -->
+    <div data-tab-panel="features" class="active">
+      <div class="grid lg:grid-cols-3 gap-8">
+        <!-- 主要内容 -->
+        <div class="lg:col-span-2">
+          <div class="prose prose-lg max-w-none">
+            {{ project.description | safe }}
+          </div>
+
+          <!-- 功能列表 -->
+          {% if project.features and project.features | length > 0 %}
+            <div class="mt-12">
+              <h2 class="text-2xl font-bold mb-6">核心功能</h2>
+              <div class="grid md:grid-cols-2 gap-6">
+                {% for feature in project.features %}
+                  <div class="card-tech" data-aos="fade-up" data-aos-delay="{{ forloop.Counter0 * 100 }}">
+                    {% if feature.icon %}
+                      <div class="w-12 h-12 bg-primary-50 text-primary rounded-xl flex items-center justify-center mb-4">
+                        <img src="{{ feature.icon }}" alt="" class="w-6 h-6">
+                      </div>
+                    {% endif %}
+                    <h3 class="font-semibold mb-2">{{ feature.name }}</h3>
+                    <p class="text-secondary text-sm">{{ feature.description }}</p>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- 侧边栏 -->
+        <div class="lg:col-span-1">
+          <div class="sticky top-32 space-y-6">
+            <!-- 产品信息卡片 -->
+            <div class="card-tech">
+              <h3 class="font-semibold mb-4">产品信息</h3>
+              <dl class="space-y-3 text-sm">
+                {% if project.platform %}
+                  <div class="flex justify-between">
+                    <dt class="text-tertiary">平台</dt>
+                    <dd class="font-medium">{{ project.platform }}</dd>
+                  </div>
+                {% endif %}
+                {% if project.tech_stack %}
+                  <div class="flex justify-between">
+                    <dt class="text-tertiary">技术栈</dt>
+                    <dd class="font-medium">{{ project.tech_stack }}</dd>
+                  </div>
+                {% endif %}
+                {% if project.created_at %}
+                  <div class="flex justify-between">
+                    <dt class="text-tertiary">发布日期</dt>
+                    <dd class="font-medium">{{ project.created_at | format_date }}</dd>
+                  </div>
+                {% endif %}
+              </dl>
+            </div>
+
+            <!-- CTA 卡片 -->
+            <div class="card-tech bg-primary-50">
+              <h3 class="font-semibold mb-2">需要定制？</h3>
+              <p class="text-sm text-secondary mb-4">
+                我们可以根据您的需求进行定制开发
+              </p>
+              <a href="/contact?project={{ project.id }}" class="btn btn-primary w-full">
+                立即咨询
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 产品截图 -->
+    {% if project.media and project.media | length > 0 %}
+      <div data-tab-panel="gallery" hidden>
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {% for media in project.media %}
+            {% if media.type == "image" %}
+              <a
+                href="{{ media.url }}"
+                data-lightbox="{{ media.url }}"
+                data-lightbox-gallery="project-gallery"
+                data-lightbox-caption="{{ media.title |default:'' }}"
+                class="block aspect-video rounded-xl overflow-hidden hover:shadow-lg transition-shadow"
+              >
+                <img src="{{ media.url }}" alt="{{ media.title |default:'产品截图' }}" class="w-full h-full object-cover">
+              </a>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- 视频演示 -->
+    {% if project.video_url %}
+      <div data-tab-panel="video" hidden>
+        <div class="aspect-video rounded-xl overflow-hidden bg-gray-900">
+          <video
+            src="{{ project.video_url }}"
+            controls
+            class="w-full h-full"
+            poster="{{ project.cover_image |default:'' }}"
+          ></video>
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- 版本历史 -->
+    {% if project.versions and project.versions | length > 0 %}
+      <div data-tab-panel="versions" hidden>
+        {% set items = project.versions %}
+        {% include "components/timeline.html" %}
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<!-- 相关案例 -->
+{% if related_cases and related_cases | length > 0 %}
+  <section class="section bg-secondary">
+    <div class="container-custom">
+      <h2 class="text-2xl font-bold mb-8" data-aos="fade-up">相关案例</h2>
+      <div class="grid-cards">
+        {% for case in related_cases %}
+          {% include "components/case-card.html" %}
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+{% endif %}
+
+<!-- CTA -->
+<section class="bg-primary py-12">
+  <div class="container-custom text-center">
+    <h2 class="text-2xl font-bold text-white mb-4" data-aos="fade-up">对这个产品感兴趣？</h2>
+    <p class="text-white/80 mb-6" data-aos="fade-up" data-aos-delay="100">
+      立即联系我们，获取产品演示或定制报价
+    </p>
+    <div class="flex flex-wrap justify-center gap-4" data-aos="fade-up" data-aos-delay="200">
+      <a href="/contact?project={{ project.id }}" class="btn bg-white text-primary hover:bg-gray-100">
+        获取报价
+      </a>
+      {% if project.demo_url %}
+        <a href="{{ project.demo_url }}" target="_blank" rel="noopener" class="btn btn-outline-light">
+          在线演示
+        </a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<style>
+  [data-tab].active {
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+  }
+</style>
+{% endblock %}

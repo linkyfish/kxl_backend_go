@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- 页面头部 -->
+<section class="bg-gradient-to-br from-gray-900 via-gray-800 to-emerald-900 py-16 md:py-20">
+  <div class="container-custom">
+    {% include "components/breadcrumb.html" %}
+
+    <h1 class="text-3xl md:text-4xl font-bold text-white mb-4" data-aos="fade-up">
+      成功案例
+    </h1>
+    <p class="text-lg text-gray-300 max-w-2xl" data-aos="fade-up" data-aos-delay="100">
+      我们与众多企业携手合作，共同实现数字化转型目标
+    </p>
+
+    <!-- 案例统计数据 -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mt-12" data-aos="fade-up" data-aos-delay="200">
+      <div class="text-center">
+        <p class="text-4xl md:text-5xl font-bold text-white mb-2">{{ stats.total_cases |default:"50" }}+</p>
+        <p class="text-gray-400">成功案例</p>
+      </div>
+      <div class="text-center">
+        <p class="text-4xl md:text-5xl font-bold text-white mb-2">{{ stats.industries |default:"10" }}+</p>
+        <p class="text-gray-400">覆盖行业</p>
+      </div>
+      <div class="text-center">
+        <p class="text-4xl md:text-5xl font-bold text-white mb-2">{{ stats.satisfaction |default:"98" }}%</p>
+        <p class="text-gray-400">客户满意度</p>
+      </div>
+      <div class="text-center">
+        <p class="text-4xl md:text-5xl font-bold text-white mb-2">{{ stats.years |default:"8" }}+</p>
+        <p class="text-gray-400">服务年限</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 筛选区域 -->
+<section class="bg-white border-b sticky top-16 z-30">
+  <div class="container-custom py-4">
+    <div class="flex flex-wrap items-center gap-4">
+      {% if categories and categories | length > 0 %}
+        <div class="flex flex-wrap gap-2">
+          <a href="/cases" class="px-4 py-2 rounded-full text-sm font-medium transition-colors {% if not current_category %}bg-primary text-white{% else %}bg-gray-100 text-secondary hover:bg-gray-200{% endif %}">
+            全部行业
+          </a>
+          {% for cat in categories %}
+            <a href="/cases?category={{ cat.id }}" class="px-4 py-2 rounded-full text-sm font-medium transition-colors {% if current_category == cat.id %}bg-primary text-white{% else %}bg-gray-100 text-secondary hover:bg-gray-200{% endif %}">
+              {{ cat.name }}
+            </a>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<!-- 案例列表 -->
+<section class="section">
+  <div class="container-custom">
+    {% if cases and cases | length > 0 %}
+      <div class="grid-cards">
+        {% for case in cases %}
+          {% include "components/case-card.html" %}
+        {% endfor %}
+      </div>
+
+      {% include "components/pagination.html" %}
+    {% else %}
+      <!-- 当没有真实案例时，显示示例展示 -->
+      <div class="text-center mb-8">
+        <p class="text-secondary">暂无案例数据，以下为示例展示</p>
+      </div>
+      <div class="grid-cards">
+        <!-- 示例案例卡片 1 - 金融行业 -->
+        <div class="card-tech overflow-hidden group" data-aos="fade-up">
+          <div class="aspect-video bg-gradient-to-br from-blue-100 to-blue-200 relative overflow-hidden">
+            <div class="absolute inset-0 flex items-center justify-center">
+              <svg class="w-16 h-16 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+              </svg>
+            </div>
+            <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          </div>
+          <div class="p-6">
+            <span class="text-xs text-primary font-medium mb-2 block">金融行业</span>
+            <h3 class="text-lg font-bold mb-2 group-hover:text-primary transition-colors">某大型银行数字化转型</h3>
+            <p class="text-sm text-secondary line-clamp-2">为某大型商业银行提供全面的数字化转型解决方案，包括核心系统升级、移动银行APP开发等。</p>
+          </div>
+        </div>
+
+        <!-- 示例案例卡片 2 - 医疗健康 -->
+        <div class="card-tech overflow-hidden group" data-aos="fade-up" data-aos-delay="100">
+          <div class="aspect-video bg-gradient-to-br from-green-100 to-green-200 relative overflow-hidden">
+            <div class="absolute inset-0 flex items-center justify-center">
+              <svg class="w-16 h-16 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+              </svg>
+            </div>
+            <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          </div>
+          <div class="p-6">
+            <span class="text-xs text-primary font-medium mb-2 block">医疗健康</span>
+            <h3 class="text-lg font-bold mb-2 group-hover:text-primary transition-colors">智慧医院管理系统</h3>
+            <p class="text-sm text-secondary line-clamp-2">为三甲医院打造智慧医疗管理平台，实现预约挂号、电子病历、远程会诊等功能一体化。</p>
+          </div>
+        </div>
+
+        <!-- 示例案例卡片 3 - 零售电商 -->
+        <div class="card-tech overflow-hidden group" data-aos="fade-up" data-aos-delay="200">
+          <div class="aspect-video bg-gradient-to-br from-orange-100 to-orange-200 relative overflow-hidden">
+            <div class="absolute inset-0 flex items-center justify-center">
+              <svg class="w-16 h-16 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+              </svg>
+            </div>
+            <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          </div>
+          <div class="p-6">
+            <span class="text-xs text-primary font-medium mb-2 block">零售电商</span>
+            <h3 class="text-lg font-bold mb-2 group-hover:text-primary transition-colors">新零售全渠道平台</h3>
+            <p class="text-sm text-secondary line-clamp-2">帮助连锁零售企业实现线上线下一体化，打通会员、库存、订单等核心业务流程。</p>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<!-- 精选案例推荐 -->
+{% if featured_cases and featured_cases | length > 0 %}
+<section class="section bg-secondary">
+  <div class="container-custom">
+    <div class="text-center mb-12">
+      <h2 class="section-title" data-aos="fade-up">精选案例</h2>
+      <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100">
+        我们最具代表性的成功案例
+      </p>
+    </div>
+    <div class="grid lg:grid-cols-2 gap-8">
+      {% for featured in featured_cases %}
+        <div class="card-tech overflow-hidden group" data-aos="fade-up" data-aos-delay="{{ forloop.Counter0 * 100 }}">
+          <div class="aspect-video bg-gradient-to-br from-gray-800 to-gray-900 rounded-t-xl overflow-hidden relative">
+            {% if featured.cover_image and featured.cover_image %}
+              <img src="{{ featured.cover_image }}" alt="{{ featured.client_name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+            {% else %}
+              <div class="absolute inset-0 flex items-center justify-center">
+                <svg class="w-20 h-20 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                </svg>
+              </div>
+            {% endif %}
+          </div>
+          <div class="p-6">
+            {% if featured.category and featured.category %}
+              <span class="text-xs text-primary font-medium mb-2 block">{{ featured.category.name }}</span>
+            {% endif %}
+            <h3 class="text-xl font-bold mb-2">{{ featured.client_name }}</h3>
+            <p class="text-secondary mb-4">{{ featured.summary | truncate_text:150 }}</p>
+            <a href="/cases/{{ featured.id }}" class="btn btn-primary btn-sm">了解更多</a>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- CTA -->
+<section class="bg-primary py-12">
+  <div class="container-custom text-center">
+    <h2 class="text-2xl font-bold text-white mb-4" data-aos="fade-up">想成为我们的下一个成功案例？</h2>
+    <p class="text-white/80 mb-6" data-aos="fade-up" data-aos-delay="100">
+      立即联系我们，开启您的数字化转型之旅
+    </p>
+    <a href="/contact" class="btn bg-white text-primary hover:bg-gray-100" data-aos="fade-up" data-aos-delay="200">
+      立即咨询
+    </a>
+  </div>
+</section>
+{% endblock %}

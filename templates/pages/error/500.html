@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}500 - 服务器错误{% endblock %}
+
+{% block content %}
+<div class="min-h-[70vh] flex items-center justify-center py-12">
+  <div class="text-center px-4" data-aos="fade-up">
+    <!-- 500 图形 -->
+    <div class="relative inline-block mb-8">
+      <span class="text-[180px] md:text-[240px] font-bold text-gray-100 select-none">500</span>
+      <div class="absolute inset-0 flex items-center justify-center">
+        <svg class="w-24 h-24 md:w-32 md:h-32 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+        </svg>
+      </div>
+    </div>
+
+    <!-- 标题和描述 -->
+    <h1 class="text-3xl md:text-4xl font-bold mb-4">服务器开小差了</h1>
+    <p class="text-secondary text-lg mb-8 max-w-md mx-auto">
+      抱歉，服务器遇到了一些问题，请稍后再试
+    </p>
+
+    <!-- 操作按钮 -->
+    <div class="flex flex-wrap justify-center gap-4">
+      <a href="/" class="btn btn-primary">
+        返回首页
+      </a>
+      <button onclick="location.reload()" class="btn btn-outline">
+        重新加载
+      </button>
+    </div>
+
+    <!-- 联系信息 -->
+    <div class="mt-12 pt-8 border-t max-w-md mx-auto">
+      <p class="text-secondary mb-2">如果问题持续存在，请联系我们：</p>
+      {% if company.email %}
+        <a href="mailto:{{ company.email }}" class="text-primary hover:underline">{{ company.email }}</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

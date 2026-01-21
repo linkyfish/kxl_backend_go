@@ -1,0 +1,6 @@
+/dist/
+/uploads/*
+!/uploads/.gitkeep
+/kxl-api
+/.env
+

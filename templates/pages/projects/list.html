@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- 页面头部 -->
+<section class="bg-gradient-to-br from-gray-900 via-gray-800 to-emerald-900 py-16 md:py-20">
+  <div class="container-custom">
+    {% include "components/breadcrumb.html" %}
+
+    <h1 class="text-3xl md:text-4xl font-bold text-white mb-4" data-aos="fade-up">
+      软件产品
+    </h1>
+    <p class="text-lg text-gray-300 max-w-2xl" data-aos="fade-up" data-aos-delay="100">
+      我们打造的优秀软件产品，覆盖多个行业领域，助力企业数字化升级
+    </p>
+  </div>
+</section>
+
+<!-- 筛选区域 -->
+<section class="bg-white border-b sticky top-16 z-30">
+  <div class="container-custom py-4">
+    <div class="flex flex-wrap items-center gap-4">
+      <!-- 分类筛选 -->
+      {% if categories and categories | length > 0 %}
+        <div class="flex flex-wrap gap-2">
+          <a href="/projects" class="px-4 py-2 rounded-full text-sm font-medium transition-colors {% if not current_category %}bg-primary text-white{% else %}bg-gray-100 text-secondary hover:bg-gray-200{% endif %}">
+            全部
+          </a>
+          {% for cat in categories %}
+            <a href="/projects?category={{ cat.id }}" class="px-4 py-2 rounded-full text-sm font-medium transition-colors {% if current_category == cat.id %}bg-primary text-white{% else %}bg-gray-100 text-secondary hover:bg-gray-200{% endif %}">
+              {{ cat.name }}
+            </a>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <!-- 搜索框 -->
+      <form action="/projects" method="GET" class="ml-auto">
+        <div class="relative">
+          <input
+            type="search"
+            name="q"
+            value="{{ q |default:'' }}"
+            placeholder="搜索产品..."
+            class="w-48 md:w-64 pl-10 pr-4 py-2 rounded-full border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 text-sm"
+          >
+          <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- 产品列表 -->
+<section class="section">
+  <div class="container-custom">
+    {% if projects and projects | length > 0 %}
+      <div class="grid-cards">
+        {% for project in projects %}
+          {% include "components/project-card.html" %}
+        {% endfor %}
+      </div>
+
+      {% include "components/pagination.html" %}
+    {% else %}
+      {% set empty_title = "暂无产品" %}
+      {% set empty_description = "当前分类下还没有产品" %}
+      {% include "components/empty-state.html" %}
+    {% endif %}
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="bg-secondary py-12">
+  <div class="container-custom text-center">
+    <h2 class="text-2xl font-bold mb-4" data-aos="fade-up">没有找到合适的产品？</h2>
+    <p class="text-secondary mb-6" data-aos="fade-up" data-aos-delay="100">
+      我们提供定制化软件开发服务，根据您的需求打造专属解决方案
+    </p>
+    <a href="/contact" class="btn btn-primary" data-aos="fade-up" data-aos-delay="200">
+      联系我们
+    </a>
+  </div>
+</section>
+{% endblock %}

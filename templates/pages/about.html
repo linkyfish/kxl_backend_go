@@ -1,0 +1,287 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- 页面头部 -->
+<section class="bg-gradient-to-br from-gray-900 via-gray-800 to-emerald-900 py-16 md:py-24">
+  <div class="container-custom text-center">
+    {% include "components/breadcrumb.html" %}
+
+    <h1 class="text-3xl md:text-5xl font-bold text-white mb-6" data-aos="fade-up">
+      关于我们
+    </h1>
+    <p class="text-xl text-gray-300 max-w-3xl mx-auto" data-aos="fade-up" data-aos-delay="100">
+      {{ company.slogan |default:"专注技术创新，助力企业数字化转型" }}
+    </p>
+  </div>
+</section>
+
+<!-- 公司简介 -->
+<section class="section">
+  <div class="container-custom">
+    <div class="grid lg:grid-cols-2 gap-12 items-center">
+      <div data-aos="fade-right">
+        <h2 class="text-3xl font-bold mb-6">{{ company.name |default:"公司名称" }}</h2>
+        <div class="prose prose-lg max-w-none text-secondary">
+          {{ company.about |default:"我们是一家专注于软件开发的技术公司，致力于为客户提供高质量的数字化解决方案。" | safe }}
+        </div>
+      </div>
+      <div data-aos="fade-left">
+        {% if company and company.about_image %}
+          <img src="{{ company.about_image }}" alt="{{ company.name }}" class="rounded-2xl shadow-xl">
+        {% else %}
+          <div class="aspect-video bg-gradient-to-br from-primary-100 to-primary-200 rounded-2xl flex items-center justify-center">
+            <svg class="w-24 h-24 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+            </svg>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 公司统计数据 -->
+<section class="py-16 bg-primary">
+  <div class="container-custom">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+      <div class="text-center" data-aos="fade-up">
+        <p class="text-4xl md:text-5xl font-bold text-white mb-2">
+          {{ stats.years |default:"8" }}+
+        </p>
+        <p class="text-white/80">年行业经验</p>
+      </div>
+      <div class="text-center" data-aos="fade-up" data-aos-delay="100">
+        <p class="text-4xl md:text-5xl font-bold text-white mb-2">
+          {{ stats.employees |default:"50" }}+
+        </p>
+        <p class="text-white/80">专业团队成员</p>
+      </div>
+      <div class="text-center" data-aos="fade-up" data-aos-delay="200">
+        <p class="text-4xl md:text-5xl font-bold text-white mb-2">
+          {{ stats.projects |default:"100" }}+
+        </p>
+        <p class="text-white/80">成功交付项目</p>
+      </div>
+      <div class="text-center" data-aos="fade-up" data-aos-delay="300">
+        <p class="text-4xl md:text-5xl font-bold text-white mb-2">
+          {{ stats.clients |default:"200" }}+
+        </p>
+        <p class="text-white/80">服务企业客户</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 公司优势 -->
+<section class="section bg-secondary">
+  <div class="container-custom">
+    <div class="text-center mb-12">
+      <h2 class="section-title" data-aos="fade-up">我们的优势</h2>
+    </div>
+
+    <div class="grid-cards-4">
+      <div class="card-feature" data-aos="fade-up">
+        <div class="card-feature-icon">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+          </svg>
+        </div>
+        <h3 class="card-feature-title">技术创新</h3>
+        <p class="card-feature-desc">持续探索前沿技术，为客户提供创新解决方案</p>
+      </div>
+
+      <div class="card-feature" data-aos="fade-up" data-aos-delay="100">
+        <div class="card-feature-icon">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+          </svg>
+        </div>
+        <h3 class="card-feature-title">专业团队</h3>
+        <p class="card-feature-desc">资深研发团队，拥有丰富的行业开发经验</p>
+      </div>
+
+      <div class="card-feature" data-aos="fade-up" data-aos-delay="200">
+        <div class="card-feature-icon">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+          </svg>
+        </div>
+        <h3 class="card-feature-title">质量保障</h3>
+        <p class="card-feature-desc">严格的质量管控流程，确保交付高品质产品</p>
+      </div>
+
+      <div class="card-feature" data-aos="fade-up" data-aos-delay="300">
+        <div class="card-feature-icon">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"></path>
+          </svg>
+        </div>
+        <h3 class="card-feature-title">全程服务</h3>
+        <p class="card-feature-desc">从需求分析到售后维护，提供全周期服务</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 发展历程 -->
+{% if milestones and milestones | length > 0 %}
+  <section class="section">
+    <div class="container-custom">
+      <div class="text-center mb-12">
+        <h2 class="section-title" data-aos="fade-up">发展历程</h2>
+        <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100">
+          一路走来，我们不断成长
+        </p>
+      </div>
+
+      {% set items = milestones %}
+      {% include "components/timeline.html" %}
+    </div>
+  </section>
+{% endif %}
+
+<!-- 核心团队 -->
+{% if team_members and team_members | length > 0 %}
+  <section class="section bg-secondary">
+    <div class="container-custom">
+      <div class="text-center mb-12">
+        <h2 class="section-title" data-aos="fade-up">核心团队</h2>
+        <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100">
+          专业的团队，为您提供专业的服务
+        </p>
+      </div>
+
+      <!-- 核心成员大卡片展示（前3位） -->
+      <div class="grid md:grid-cols-3 gap-8 mb-12">
+        {% for member in team_members | slice:":3" %}
+          <div class="card-tech text-center py-8" data-aos="fade-up" data-aos-delay="{{ forloop.Counter0 * 100 }}">
+            <div class="w-28 h-28 mx-auto mb-6 rounded-full overflow-hidden ring-4 ring-primary-100">
+              {% if member.avatar and member.avatar %}
+                <img src="{{ member.avatar }}" alt="{{ member.name }}" class="w-full h-full object-cover">
+              {% else %}
+                <div class="w-full h-full bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center text-3xl font-bold text-primary">
+                  {{ member.name | first | upper }}
+                </div>
+              {% endif %}
+            </div>
+            <h3 class="text-xl font-bold mb-1">{{ member.name }}</h3>
+            <p class="text-primary font-medium mb-3">{{ member.role |default:member.position |default:"团队成员" }}</p>
+            {% if member.bio and member.bio %}
+              <p class="text-secondary text-sm px-4">{{ member.bio | truncate_text:100 }}</p>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+
+      <!-- 其他成员小卡片 -->
+      {% if team_members | length > 3 %}
+        <div class="grid-cards-4">
+          {% for member in team_members | slice:"3:" %}
+            {% include "components/team-card.html" %}
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+  </section>
+{% else %}
+  <!-- 默认团队展示 -->
+  <section class="section bg-secondary">
+    <div class="container-custom">
+      <div class="text-center mb-12">
+        <h2 class="section-title" data-aos="fade-up">核心团队</h2>
+        <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100">
+          专业的团队，为您提供专业的服务
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-8">
+        <div class="card-tech text-center py-8" data-aos="fade-up">
+          <div class="w-28 h-28 mx-auto mb-6 rounded-full bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
+            <svg class="w-12 h-12 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold mb-1">技术总监</h3>
+          <p class="text-primary font-medium mb-3">CTO</p>
+          <p class="text-secondary text-sm px-4">10年以上软件开发经验，负责公司技术架构和团队管理</p>
+        </div>
+
+        <div class="card-tech text-center py-8" data-aos="fade-up" data-aos-delay="100">
+          <div class="w-28 h-28 mx-auto mb-6 rounded-full bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
+            <svg class="w-12 h-12 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold mb-1">产品总监</h3>
+          <p class="text-primary font-medium mb-3">CPO</p>
+          <p class="text-secondary text-sm px-4">专注产品设计与用户体验，带领团队打造优质产品</p>
+        </div>
+
+        <div class="card-tech text-center py-8" data-aos="fade-up" data-aos-delay="200">
+          <div class="w-28 h-28 mx-auto mb-6 rounded-full bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
+            <svg class="w-12 h-12 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold mb-1">运营总监</h3>
+          <p class="text-primary font-medium mb-3">COO</p>
+          <p class="text-secondary text-sm px-4">负责公司运营管理，确保项目高效交付与客户满意</p>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endif %}
+
+<!-- 合作伙伴 -->
+<section class="section">
+  <div class="container-custom">
+    <div class="text-center mb-12">
+      <h2 class="section-title" data-aos="fade-up">合作伙伴</h2>
+      <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100">
+        我们与众多知名企业建立了长期合作关系
+      </p>
+    </div>
+
+    {% if partners and partners | length > 0 %}
+      <div class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-8 items-center">
+        {% for partner in partners %}
+          <div class="flex items-center justify-center p-4 grayscale hover:grayscale-0 transition-all duration-300" data-aos="fade-up" data-aos-delay="{{ forloop.Counter0 * 50 }}">
+            {% if partner.logo and partner.logo %}
+              <img src="{{ partner.logo }}" alt="{{ partner.name }}" class="max-h-12 w-auto">
+            {% else %}
+              <span class="text-secondary font-medium text-center">{{ partner.name }}</span>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <!-- 默认合作伙伴占位展示 -->
+      <div class="grid grid-cols-3 md:grid-cols-6 gap-8">
+        {% for i in range(1, 7) %}
+          <div class="aspect-[3/2] bg-gray-100 rounded-lg flex items-center justify-center grayscale hover:grayscale-0 transition-all duration-300" data-aos="fade-up" data-aos-delay="{{ forloop.Counter0 * 50 }}">
+            <div class="text-center">
+              <svg class="w-10 h-10 text-gray-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+              </svg>
+              <span class="text-gray-400 text-xs">合作伙伴</span>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="bg-primary py-16">
+  <div class="container-custom text-center">
+    <h2 class="text-3xl font-bold text-white mb-4" data-aos="fade-up">与我们合作</h2>
+    <p class="text-xl text-white/80 mb-8 max-w-2xl mx-auto" data-aos="fade-up" data-aos-delay="100">
+      无论您是需要软件开发、技术咨询还是数字化转型服务，我们都能为您提供专业支持
+    </p>
+    <a href="/contact" class="btn btn-lg bg-white text-primary hover:bg-gray-100" data-aos="fade-up" data-aos-delay="200">
+      立即联系
+    </a>
+  </div>
+</section>
+{% endblock %}

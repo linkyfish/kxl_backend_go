@@ -1,0 +1,224 @@
+<!-- 导航栏 -->
+<header
+  data-navbar
+  class="fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-white/80 backdrop-blur-md border-b border-transparent"
+>
+  <nav class="container-custom h-16 flex items-center justify-between">
+    <!-- Logo -->
+    <a href="/" class="flex items-center gap-2 font-bold text-xl text-primary">
+      {% if company and company.logo %}
+        <img src="{{ company.logo }}" alt="{{ company.name }}" class="h-8 w-auto">
+      {% elif company %}
+        <span class="text-2xl">{{ company.name |default:"企业官网" }}</span>
+      {% else %}
+        <span class="text-2xl">企业官网</span>
+      {% endif %}
+    </a>
+
+    <!-- 桌面端导航 -->
+    <div class="hidden lg:flex items-center gap-8">
+      <!-- 主导航链接 -->
+      <ul class="flex items-center gap-6">
+        <li>
+          <a href="/" class="nav-link {% if current_path == '/' %}active{% endif %}">
+            首页
+          </a>
+        </li>
+        <li>
+          <a href="/projects" class="nav-link {% if current_path|slice:':9' == '/projects' %}active{% endif %}">
+            软件产品
+          </a>
+        </li>
+        <li>
+          <a href="/cases" class="nav-link {% if current_path|slice:':6' == '/cases' %}active{% endif %}">
+            成功案例
+          </a>
+        </li>
+        <li>
+          <a href="/articles" class="nav-link {% if current_path|slice:':9' == '/articles' %}active{% endif %}">
+            新闻动态
+          </a>
+        </li>
+        <li>
+          <a href="/about" class="nav-link {% if current_path == '/about' %}active{% endif %}">
+            关于我们
+          </a>
+        </li>
+        <li>
+          <a href="/contact" class="nav-link {% if current_path == '/contact' %}active{% endif %}">
+            联系我们
+          </a>
+        </li>
+      </ul>
+
+      <!-- 搜索按钮 -->
+      <button
+        data-search-toggle
+        class="btn-icon text-secondary hover:text-primary"
+        aria-label="搜索"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+        </svg>
+      </button>
+
+    </div>
+
+    <!-- 移动端菜单按钮 -->
+    <button
+      data-menu-toggle
+      class="lg:hidden btn-icon text-secondary"
+      aria-label="菜单"
+      aria-expanded="false"
+    >
+      <svg class="w-6 h-6 menu-icon-open" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+      </svg>
+      <svg class="w-6 h-6 menu-icon-close hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+      </svg>
+    </button>
+  </nav>
+
+  <!-- 搜索框 -->
+  <div
+    data-search-box
+    class="absolute top-full left-0 right-0 bg-white border-t shadow-lg py-4 hidden"
+  >
+    <form action="/search" method="GET" class="container-custom">
+      <div class="relative max-w-2xl mx-auto">
+        <input
+          type="search"
+          name="q"
+          data-search-input
+          placeholder="搜索项目、文章、案例..."
+          class="w-full pl-12 pr-12 py-3 rounded-full border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20"
+        >
+        <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+        </svg>
+        <button
+          type="button"
+          data-search-close
+          class="absolute right-4 top-1/2 -translate-y-1/2 text-tertiary hover:text-primary"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- 移动端菜单 -->
+  <div
+    data-mobile-menu
+    class="lg:hidden fixed inset-0 top-16 bg-white z-40 transform translate-x-full transition-transform duration-300"
+  >
+    <nav class="container-custom py-6">
+      <ul class="space-y-4">
+        <li>
+          <a href="/" class="block py-2 text-lg {% if current_path == '/' %}text-primary font-medium{% else %}text-secondary{% endif %}">
+            首页
+          </a>
+        </li>
+        <li>
+          <a href="/projects" class="block py-2 text-lg {% if current_path|slice:':9' == '/projects' %}text-primary font-medium{% else %}text-secondary{% endif %}">
+            软件产品
+          </a>
+        </li>
+        <li>
+          <a href="/cases" class="block py-2 text-lg {% if current_path|slice:':6' == '/cases' %}text-primary font-medium{% else %}text-secondary{% endif %}">
+            成功案例
+          </a>
+        </li>
+        <li>
+          <a href="/articles" class="block py-2 text-lg {% if current_path|slice:':9' == '/articles' %}text-primary font-medium{% else %}text-secondary{% endif %}">
+            新闻动态
+          </a>
+        </li>
+        <li>
+          <a href="/about" class="block py-2 text-lg {% if current_path == '/about' %}text-primary font-medium{% else %}text-secondary{% endif %}">
+            关于我们
+          </a>
+        </li>
+        <li>
+          <a href="/contact" class="block py-2 text-lg {% if current_path == '/contact' %}text-primary font-medium{% else %}text-secondary{% endif %}">
+            联系我们
+          </a>
+        </li>
+      </ul>
+
+    </nav>
+  </div>
+</header>
+
+<!-- 导航栏占位符 -->
+<div class="h-16"></div>
+
+<style>
+  /* 导航链接样式 */
+  .nav-link {
+    position: relative;
+    padding: 0.5rem 0;
+    color: var(--text-secondary);
+    font-medium: 500;
+    transition: color 0.2s;
+  }
+
+  .nav-link:hover,
+  .nav-link.active {
+    color: var(--color-primary);
+  }
+
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background-color: var(--color-primary);
+    transition: width 0.2s;
+  }
+
+  .nav-link:hover::after,
+  .nav-link.active::after {
+    width: 100%;
+  }
+
+  /* 滚动后的导航栏样式 */
+  [data-navbar].navbar-scrolled {
+    background-color: rgba(255, 255, 255, 0.95);
+    border-color: var(--border-color);
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* 隐藏导航栏（向下滚动时） */
+  [data-navbar].navbar-hidden {
+    transform: translateY(-100%);
+  }
+
+  /* 移动端菜单打开状态 */
+  [data-mobile-menu].open {
+    transform: translateX(0);
+  }
+
+  [data-menu-toggle][aria-expanded="true"] .menu-icon-open {
+    display: none;
+  }
+
+  [data-menu-toggle][aria-expanded="true"] .menu-icon-close {
+    display: block;
+  }
+
+  /* 搜索框打开状态 */
+  [data-search-box].open {
+    display: block;
+  }
+
+  /* 下拉菜单打开状态 */
+  [data-dropdown-menu].open {
+    display: block;
+  }
+</style>

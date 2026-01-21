@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head><title>Test Cases</title></head>
+<body>
+<h1>Test Cases Page</h1>
+<p>Current path: {{ current_path }}</p>
+<p>Page title: {{ page_title }}</p>
+
+{% if cases | length > 0 %}
+<ul>
+{% for case in cases %}
+  <li>{{ case.client_name }}</li>
+{% endfor %}
+</ul>
+{% else %}
+<p>No cases found</p>
+{% endif %}
+</body>
+</html>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="{{ theme |default:'tech-green' }}">
+<head>
+  {% include "components/head.html" %}
+</head>
+<body class="antialiased bg-base text-primary min-h-screen flex flex-col">
+  <!-- 跳过导航（无障碍） -->
+  <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-white focus:rounded-lg">
+    跳到主要内容
+  </a>
+
+  <!-- 导航栏 -->
+  {% include "components/navbar.html" %}
+
+  <!-- 页面内容 -->
+  <main id="main-content" class="flex-1">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- 页脚 -->
+  {% include "components/footer.html" %}
+
+  <!-- 返回顶部按钮 -->
+  <button
+    data-back-to-top
+    class="fixed bottom-8 right-8 w-12 h-12 bg-primary text-white rounded-full shadow-lg opacity-0 invisible transition-all duration-300 hover:bg-primary-dark hover:shadow-glow z-50"
+    aria-label="返回顶部"
+  >
+    <svg class="w-6 h-6 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
+    </svg>
+  </button>
+
+  <!-- 脚本 -->
+  {% include "components/scripts.html" %}
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

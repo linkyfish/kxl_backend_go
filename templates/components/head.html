@@ -1,0 +1,90 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+<!-- SEO Meta Tags -->
+<title>{% block title %}{{ page_title |default:"" }}{% if page_title and page_title %} - {% endif %}{{ company.name |default:"企业官网" }}{% endblock %}</title>
+<meta name="description" content="{% block description %}{{ page_description |default:company.description |default:"" }}{% endblock %}">
+<meta name="keywords" content="{% block keywords %}{{ page_keywords |default:company.keywords |default:"" }}{% endblock %}">
+<meta name="author" content="{{ company.name |default:'' }}">
+
+<!-- Canonical URL -->
+{% if canonical_url and canonical_url %}
+<link rel="canonical" href="{{ canonical_url }}">
+{% endif %}
+
+<!-- Robots -->
+<meta name="robots" content="{% block robots %}index, follow{% endblock %}">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="{% block og_type %}website{% endblock %}">
+<meta property="og:url" content="{{ current_url |default:'' }}">
+<meta property="og:title" content="{% block og_title %}{{ page_title |default:company.name |default:'企业官网' }}{% endblock %}">
+<meta property="og:description" content="{% block og_description %}{{ page_description |default:company.description |default:'' }}{% endblock %}">
+{% if og_image and og_image %}
+<meta property="og:image" content="{{ og_image }}">
+{% elif company and company.logo %}
+<meta property="og:image" content="{{ company.logo }}">
+{% endif %}
+<meta property="og:site_name" content="{{ company.name |default:'企业官网' }}">
+<meta property="og:locale" content="zh_CN">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ page_title |default:company.name |default:'企业官网' }}">
+<meta name="twitter:description" content="{{ page_description |default:company.description |default:'' }}">
+{% if og_image and og_image %}
+<meta name="twitter:image" content="{{ og_image }}">
+{% endif %}
+
+<!-- Favicon -->
+{% if company and company.favicon %}
+<link rel="icon" type="image/x-icon" href="{{ company.favicon }}">
+{% else %}
+<link rel="icon" type="image/svg+xml" href="/static/images/favicon.svg">
+{% endif %}
+<link rel="apple-touch-icon" href="/static/images/apple-touch-icon.png">
+
+<!-- Preconnect for performance -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Preload critical resources -->
+<link rel="preload" href="/static/css/style.css" as="style">
+<link rel="preload" href="/static/css/main.css" as="style">
+<link rel="preload" href="/static/js/main.js" as="script">
+
+<!-- Styles -->
+<link rel="stylesheet" href="/static/css/style.css">
+<link rel="stylesheet" href="/static/css/main.css">
+
+<!-- Structured Data (JSON-LD) -->
+{% block structured_data %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "{{ company.name |default:'企业官网' }}",
+  "url": "{{ base_url |default:'' }}",
+  {% if company and company.logo %}"logo": "{{ company.logo }}",{% endif %}
+  {% if company and company.description %}"description": "{{ company.description }}",{% endif %}
+  {% if company and company.email %}"email": "{{ company.email }}",{% endif %}
+  {% if company and company.phone %}"telephone": "{{ company.phone }}",{% endif %}
+  {% if company and company.address %}
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "{{ company.address }}"
+  },
+  {% endif %}
+  "sameAs": [
+    {% if company and company.wechat %}"{{ company.wechat }}"{% endif %}
+  ]
+}
+</script>
+{% endblock %}
+
+<!-- Additional head content -->
+{% block head %}{% endblock %}

@@ -1,0 +1,156 @@
+<!-- 主脚本 -->
+<script type="module" src="/static/js/main.js"></script>
+
+<!-- 返回顶部按钮样式 -->
+<style>
+  [data-back-to-top].visible {
+    opacity: 1;
+    visibility: visible;
+  }
+</style>
+
+<!-- 返回顶部按钮脚本 -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const backToTop = document.querySelector('[data-back-to-top]');
+    if (!backToTop) return;
+
+    // 滚动监听
+    function toggleVisibility() {
+      if (window.scrollY > 300) {
+        backToTop.classList.add('visible');
+      } else {
+        backToTop.classList.remove('visible');
+      }
+    }
+
+    window.addEventListener('scroll', toggleVisibility, { passive: true });
+
+    // 点击事件
+    backToTop.addEventListener('click', function() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // 初始状态
+    toggleVisibility();
+  });
+</script>
+
+<!-- 灯箱样式 -->
+<style>
+  .lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .lightbox.open {
+    display: flex;
+  }
+
+  .lightbox-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.9);
+  }
+
+  .lightbox-content {
+    position: relative;
+    max-width: 90vw;
+    max-height: 90vh;
+  }
+
+  .lightbox-close,
+  .lightbox-prev,
+  .lightbox-next {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .lightbox-close:hover,
+  .lightbox-prev:hover,
+  .lightbox-next:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  .lightbox-close {
+    top: -60px;
+    right: 0;
+  }
+
+  .lightbox-prev {
+    left: -60px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .lightbox-next {
+    right: -60px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .lightbox-image-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 200px;
+    min-height: 200px;
+  }
+
+  .lightbox-image {
+    max-width: 90vw;
+    max-height: 80vh;
+    object-fit: contain;
+    transition: opacity 0.3s;
+  }
+
+  .lightbox-loading {
+    position: absolute;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .lightbox-caption {
+    margin-top: 16px;
+    text-align: center;
+    color: white;
+    font-size: 14px;
+  }
+
+  .lightbox-counter {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 14px;
+  }
+
+  @media (max-width: 768px) {
+    .lightbox-prev {
+      left: 10px;
+    }
+
+    .lightbox-next {
+      right: 10px;
+    }
+  }
+</style>
+
+<!-- 额外脚本块 -->
+{% block extra_scripts %}{% endblock %}

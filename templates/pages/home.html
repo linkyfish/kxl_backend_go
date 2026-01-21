@@ -1,0 +1,786 @@
+{% extends "base.html" %}
+
+{% block title %}{{ company.slogan |default:"专业软件开发服务商" }}{% endblock %}
+
+{% block description %}{{ company.description |default:"提供优质的软件开发、定制化解决方案和技术服务" }}{% endblock %}
+
+{% block content %}
+<!-- Banner 轮播 -->
+<section class="relative min-h-[70vh] md:min-h-[80vh] overflow-hidden" x-data="bannerSlider()" x-init="init()">
+  <!-- 轮播容器 -->
+  <div class="absolute inset-0">
+    {% if banners and banners | length > 0 %}
+      {% for banner in banners %}
+        <div
+          class="absolute inset-0 transition-opacity duration-1000"
+          :class="{ 'opacity-100 z-10': activeSlide === {{ forloop.Counter0 }}, 'opacity-0 z-0': activeSlide !== {{ forloop.Counter0 }} }"
+        >
+          <!-- 背景图片 -->
+          {% if banner.image and banner.image %}
+            <img src="{{ banner.image }}" alt="{{ banner.title }}" class="absolute inset-0 w-full h-full object-cover">
+            <div class="absolute inset-0 bg-black/50"></div>
+          {% else %}
+            <div class="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-emerald-900">
+              <div class="absolute inset-0 bg-grid opacity-10"></div>
+              <div class="absolute top-20 left-10 w-72 h-72 bg-primary/20 rounded-full blur-3xl"></div>
+              <div class="absolute bottom-20 right-10 w-96 h-96 bg-primary/10 rounded-full blur-3xl"></div>
+            </div>
+          {% endif %}
+
+          <!-- 内容 -->
+          <div class="relative z-10 h-full flex items-center">
+            <div class="container-custom">
+              <div class="max-w-3xl">
+                {% if banner.tag and banner.tag %}
+                  <div class="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full mb-6">
+                    <span class="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
+                    <span class="text-sm text-gray-300">{{ banner.tag }}</span>
+                  </div>
+                {% endif %}
+
+                <h2 class="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
+                  {{ banner.title |default:"欢迎访问我们的网站" }}
+                  {% if banner.highlight and banner.highlight %}
+                    <span class="text-gradient bg-gradient-to-r from-primary to-primary-light">{{ banner.highlight }}</span>
+                  {% endif %}
+                </h2>
+
+                {% if banner.subtitle and banner.subtitle %}
+                  <p class="text-xl text-gray-300 mb-8 max-w-2xl">{{ banner.subtitle }}</p>
+                {% endif %}
+
+                {% if banner.link and banner.link %}
+                  <a href="{{ banner.link }}" class="btn btn-lg btn-primary shadow-glow">
+                    {{ banner.link_text |default:"了解更多" }}
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                    </svg>
+                  </a>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <!-- 默认 Banner 展示 -->
+      <template x-for="(slide, index) in defaultSlides" :key="index">
+        <div
+          class="absolute inset-0 transition-opacity duration-1000"
+          :class="{ 'opacity-100 z-10': activeSlide === index, 'opacity-0 z-0': activeSlide !== index }"
+        >
+          <div class="absolute inset-0" :class="slide.bgClass">
+            <div class="absolute inset-0 bg-grid opacity-10"></div>
+            <div class="absolute top-20 left-10 w-72 h-72 bg-primary/20 rounded-full blur-3xl"></div>
+            <div class="absolute bottom-20 right-10 w-96 h-96 bg-primary/10 rounded-full blur-3xl"></div>
+          </div>
+
+          <div class="relative z-10 h-full flex items-center">
+            <div class="container-custom">
+              <div class="max-w-3xl">
+                <div class="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full mb-6">
+                  <span class="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
+                  <span class="text-sm text-gray-300" x-text="slide.tag"></span>
+                </div>
+
+                <h2 class="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
+                  <span x-text="slide.title"></span>
+                  <span class="text-gradient bg-gradient-to-r from-primary to-primary-light" x-text="slide.highlight"></span>
+                </h2>
+
+                <p class="text-xl text-gray-300 mb-8 max-w-2xl" x-text="slide.subtitle"></p>
+
+                <a :href="slide.link" class="btn btn-lg btn-primary shadow-glow">
+                  <span x-text="slide.linkText"></span>
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                  </svg>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
+    {% endif %}
+  </div>
+
+  <!-- 轮播指示器 -->
+  <div class="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex items-center gap-3">
+    <template x-for="(_, index) in totalSlides" :key="index">
+      <button
+        @click="goToSlide(index)"
+        class="w-3 h-3 rounded-full transition-all duration-300"
+        :class="activeSlide === index ? 'bg-primary w-8' : 'bg-white/50 hover:bg-white/80'"
+      ></button>
+    </template>
+  </div>
+
+  <!-- 左右切换按钮 -->
+  <button
+    @click="prevSlide()"
+    class="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors flex items-center justify-center"
+  >
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+    </svg>
+  </button>
+  <button
+    @click="nextSlide()"
+    class="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors flex items-center justify-center"
+  >
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+    </svg>
+  </button>
+</section>
+
+<script>
+function bannerSlider() {
+  return {
+    activeSlide: 0,
+    totalSlides: {% if banners and banners | length > 0 %}{{ banners | length }}{% else %}3{% endif %},
+    autoplayInterval: null,
+    defaultSlides: [
+      {
+        bgClass: 'bg-gradient-to-br from-gray-900 via-gray-800 to-emerald-900',
+        tag: '{{ company.tagline |default:"数字化转型合作伙伴" }}',
+        title: '{{ company.hero_title |default:"用技术创新" }}',
+        highlight: '{{ company.hero_highlight |default:"驱动业务增长" }}',
+        subtitle: '{{ company.hero_subtitle |default:"我们专注于为企业提供专业的软件开发服务，助力您的数字化转型之路" }}',
+        link: '/contact',
+        linkText: '立即咨询'
+      },
+      {
+        bgClass: 'bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900',
+        tag: '软件产品',
+        title: '专业的',
+        highlight: '软件开发服务',
+        subtitle: '从需求分析到产品交付，我们提供全流程的软件开发解决方案',
+        link: '/projects',
+        linkText: '查看产品'
+      },
+      {
+        bgClass: 'bg-gradient-to-br from-emerald-900 via-teal-900 to-cyan-900',
+        tag: '成功案例',
+        title: '携手企业共创',
+        highlight: '数字化未来',
+        subtitle: '已为数百家企业提供数字化转型服务，覆盖金融、医疗、零售等多个行业',
+        link: '/cases',
+        linkText: '查看案例'
+      }
+    ],
+    init() {
+      this.startAutoplay();
+    },
+    startAutoplay() {
+      this.autoplayInterval = setInterval(() => {
+        this.nextSlide();
+      }, 5000);
+    },
+    stopAutoplay() {
+      if (this.autoplayInterval) {
+        clearInterval(this.autoplayInterval);
+      }
+    },
+    nextSlide() {
+      this.activeSlide = (this.activeSlide + 1) % this.totalSlides;
+    },
+    prevSlide() {
+      this.activeSlide = (this.activeSlide - 1 + this.totalSlides) % this.totalSlides;
+    },
+    goToSlide(index) {
+      this.stopAutoplay();
+      this.activeSlide = index;
+      this.startAutoplay();
+    }
+  }
+}
+</script>
+
+<!-- 统计数据区块 -->
+<section class="py-12 bg-white border-b">
+  <div class="container-custom">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+      <div class="text-center" data-aos="fade-up">
+        <p class="text-3xl md:text-4xl font-bold text-primary mb-1">{{ stats.years |default:"8" }}+</p>
+        <p class="text-sm text-secondary">年行业经验</p>
+      </div>
+      <div class="text-center" data-aos="fade-up" data-aos-delay="100">
+        <p class="text-3xl md:text-4xl font-bold text-primary mb-1">{{ stats.projects |default:"100" }}+</p>
+        <p class="text-sm text-secondary">成功项目</p>
+      </div>
+      <div class="text-center" data-aos="fade-up" data-aos-delay="200">
+        <p class="text-3xl md:text-4xl font-bold text-primary mb-1">{{ stats.clients |default:"200" }}+</p>
+        <p class="text-sm text-secondary">服务客户</p>
+      </div>
+      <div class="text-center" data-aos="fade-up" data-aos-delay="300">
+        <p class="text-3xl md:text-4xl font-bold text-primary mb-1">{{ stats.satisfaction |default:"98" }}%</p>
+        <p class="text-sm text-secondary">客户满意度</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 软件产品精选 -->
+{% if featured_projects and featured_projects | length > 0 %}
+<section class="section bg-secondary">
+  <div class="container-custom">
+    <!-- 标题 -->
+    <div class="text-center mb-12">
+      <h2 class="section-title" data-aos="fade-up">软件产品</h2>
+      <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100">
+        我们打造的优秀软件产品，助力各行业数字化升级
+      </p>
+    </div>
+
+    <!-- 产品列表 -->
+    <div class="grid-cards">
+      {% for project in featured_projects %}
+        {% include "components/project-card.html" %}
+      {% endfor %}
+    </div>
+
+    <!-- 查看更多 -->
+    <div class="text-center mt-10" data-aos="fade-up">
+      <a href="/projects" class="btn btn-outline">
+        查看全部产品
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+        </svg>
+      </a>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- 公司优势/特色 -->
+{% if features and features | length > 0 %}
+<section class="section">
+  <div class="container-custom">
+    <!-- 标题 -->
+    <div class="text-center mb-12">
+      <h2 class="section-title" data-aos="fade-up">为什么选择我们</h2>
+      <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100">
+        专业团队、丰富经验、优质服务，我们是您值得信赖的技术合作伙伴
+      </p>
+    </div>
+
+    <!-- 特色列表 -->
+    <div class="grid-cards-4">
+      {% for feature in features %}
+        {% include "components/feature-card.html" %}
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% else %}
+<!-- 默认优势展示 -->
+<section class="section">
+  <div class="container-custom">
+    <div class="text-center mb-12">
+      <h2 class="section-title" data-aos="fade-up">为什么选择我们</h2>
+      <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100">
+        专业团队、丰富经验、优质服务，我们是您值得信赖的技术合作伙伴
+      </p>
+    </div>
+
+    <div class="grid-cards-4">
+      <div class="card-feature" data-aos="fade-up">
+        <div class="card-feature-icon">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+          </svg>
+        </div>
+        <h3 class="card-feature-title">技术创新</h3>
+        <p class="card-feature-desc">持续探索前沿技术，为客户提供创新解决方案</p>
+      </div>
+
+      <div class="card-feature" data-aos="fade-up" data-aos-delay="100">
+        <div class="card-feature-icon">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+          </svg>
+        </div>
+        <h3 class="card-feature-title">专业团队</h3>
+        <p class="card-feature-desc">资深研发团队，拥有丰富的行业开发经验</p>
+      </div>
+
+      <div class="card-feature" data-aos="fade-up" data-aos-delay="200">
+        <div class="card-feature-icon">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+          </svg>
+        </div>
+        <h3 class="card-feature-title">质量保障</h3>
+        <p class="card-feature-desc">严格的质量管控流程，确保交付高品质产品</p>
+      </div>
+
+      <div class="card-feature" data-aos="fade-up" data-aos-delay="300">
+        <div class="card-feature-icon">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"></path>
+          </svg>
+        </div>
+        <h3 class="card-feature-title">全程服务</h3>
+        <p class="card-feature-desc">从需求分析到售后维护，提供全周期服务</p>
+      </div>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- 服务流程 -->
+<section class="section bg-secondary">
+  <div class="container-custom">
+    <div class="text-center mb-12">
+      <h2 class="section-title" data-aos="fade-up">服务流程</h2>
+      <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100">
+        标准化的服务流程，确保项目高质量交付
+      </p>
+    </div>
+
+    <div class="relative">
+      <!-- 连接线（桌面端） -->
+      <div class="hidden lg:block absolute top-24 left-[10%] right-[10%] h-0.5 bg-gradient-to-r from-primary/20 via-primary to-primary/20"></div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
+        <!-- 步骤 1 -->
+        <div class="relative text-center" data-aos="fade-up">
+          <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-primary text-white flex items-center justify-center text-xl font-bold relative z-10">
+            01
+          </div>
+          <h3 class="font-bold mb-2">需求沟通</h3>
+          <p class="text-sm text-secondary">深入了解您的业务需求和目标，明确项目范围</p>
+        </div>
+
+        <!-- 步骤 2 -->
+        <div class="relative text-center" data-aos="fade-up" data-aos-delay="100">
+          <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-primary text-white flex items-center justify-center text-xl font-bold relative z-10">
+            02
+          </div>
+          <h3 class="font-bold mb-2">方案设计</h3>
+          <p class="text-sm text-secondary">制定详细的技术方案和项目规划</p>
+        </div>
+
+        <!-- 步骤 3 -->
+        <div class="relative text-center" data-aos="fade-up" data-aos-delay="200">
+          <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-primary text-white flex items-center justify-center text-xl font-bold relative z-10">
+            03
+          </div>
+          <h3 class="font-bold mb-2">开发实施</h3>
+          <p class="text-sm text-secondary">敏捷开发，定期汇报进度，确保透明沟通</p>
+        </div>
+
+        <!-- 步骤 4 -->
+        <div class="relative text-center" data-aos="fade-up" data-aos-delay="300">
+          <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-primary text-white flex items-center justify-center text-xl font-bold relative z-10">
+            04
+          </div>
+          <h3 class="font-bold mb-2">测试交付</h3>
+          <p class="text-sm text-secondary">严格测试，确保产品质量，按时交付上线</p>
+        </div>
+
+        <!-- 步骤 5 -->
+        <div class="relative text-center" data-aos="fade-up" data-aos-delay="400">
+          <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-primary text-white flex items-center justify-center text-xl font-bold relative z-10">
+            05
+          </div>
+          <h3 class="font-bold mb-2">运维支持</h3>
+          <p class="text-sm text-secondary">持续运维和技术支持，保障系统稳定运行</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="text-center mt-10" data-aos="fade-up">
+      <a href="/contact" class="btn btn-primary">
+        开始您的项目
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+        </svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- 成功案例精选 -->
+{% if featured_cases and featured_cases | length > 0 %}
+<section class="section">
+  <div class="container-custom">
+    <!-- 标题 -->
+    <div class="text-center mb-12">
+      <h2 class="section-title" data-aos="fade-up">成功案例</h2>
+      <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100">
+        我们与众多企业携手合作，共同实现数字化转型目标
+      </p>
+    </div>
+
+    <!-- 案例列表 -->
+    <div class="grid-cards">
+      {% for case in featured_cases %}
+        {% include "components/case-card.html" %}
+      {% endfor %}
+    </div>
+
+    <!-- 查看更多 -->
+    <div class="text-center mt-10" data-aos="fade-up">
+      <a href="/cases" class="btn btn-outline">
+        查看全部案例
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+        </svg>
+      </a>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- 客户评价 -->
+<section class="section bg-secondary">
+  <div class="container-custom">
+    <div class="text-center mb-12">
+      <h2 class="section-title" data-aos="fade-up">客户评价</h2>
+      <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100">
+        听听客户怎么说
+      </p>
+    </div>
+
+    {% if testimonials and testimonials | length > 0 %}
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {% for testimonial in testimonials %}
+          <div class="card-tech" data-aos="fade-up" data-aos-delay="{{ forloop.Counter0 * 100 }}">
+            <!-- 评分星星 -->
+            <div class="flex gap-1 mb-4">
+              {% for i in range(1, 6) %}
+                <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                </svg>
+              {% endfor %}
+            </div>
+            <p class="text-secondary mb-6 italic">"{{ testimonial.content }}"</p>
+            <div class="flex items-center gap-4">
+              {% if testimonial.avatar and testimonial.avatar %}
+                <img src="{{ testimonial.avatar }}" alt="{{ testimonial.name }}" class="w-12 h-12 rounded-full object-cover">
+              {% else %}
+                <div class="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center text-primary font-bold">
+                  {{ testimonial.name | first | upper }}
+                </div>
+              {% endif %}
+              <div>
+                <p class="font-semibold">{{ testimonial.name }}</p>
+                <p class="text-sm text-tertiary">{{ testimonial.title |default:"" }} · {{ testimonial.company |default:"" }}</p>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <!-- 默认客户评价展示 -->
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div class="card-tech" data-aos="fade-up">
+          <div class="flex gap-1 mb-4">
+            {% for i in range(1, 6) %}
+              <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+              </svg>
+            {% endfor %}
+          </div>
+          <p class="text-secondary mb-6 italic">"团队非常专业，从需求分析到最终交付都超出预期。系统上线后运行稳定，大大提升了我们的工作效率。"</p>
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">张</div>
+            <div>
+              <p class="font-semibold">张总</p>
+              <p class="text-sm text-tertiary">CTO · 某金融科技公司</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-tech" data-aos="fade-up" data-aos-delay="100">
+          <div class="flex gap-1 mb-4">
+            {% for i in range(1, 6) %}
+              <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+              </svg>
+            {% endfor %}
+          </div>
+          <p class="text-secondary mb-6 italic">"合作非常愉快，沟通顺畅，响应及时。定制的医疗管理系统完美契合我们的业务流程，患者和医护人员都很满意。"</p>
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold">李</div>
+            <div>
+              <p class="font-semibold">李院长</p>
+              <p class="text-sm text-tertiary">院长 · 某三甲医院</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-tech" data-aos="fade-up" data-aos-delay="200">
+          <div class="flex gap-1 mb-4">
+            {% for i in range(1, 6) %}
+              <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+              </svg>
+            {% endfor %}
+          </div>
+          <p class="text-secondary mb-6 italic">"新零售系统帮助我们实现了线上线下一体化，会员增长了 150%，复购率提升明显。强烈推荐！"</p>
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold">王</div>
+            <div>
+              <p class="font-semibold">王经理</p>
+              <p class="text-sm text-tertiary">运营总监 · 某连锁零售企业</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<!-- 行业解决方案 -->
+<section class="section">
+  <div class="container-custom">
+    <div class="text-center mb-12">
+      <h2 class="section-title" data-aos="fade-up">行业解决方案</h2>
+      <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100">
+        深耕多个行业，提供专业的数字化解决方案
+      </p>
+    </div>
+
+    {% if solutions and solutions | length > 0 %}
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {% for solution in solutions %}
+          <a href="{{ solution.link |default:'/contact' }}" class="card-tech group overflow-hidden" data-aos="fade-up" data-aos-delay="{{ forloop.Counter0 * 100 }}">
+            <div class="aspect-video bg-gradient-to-br {{ solution.bg_class |default:'from-blue-100 to-blue-200' }} rounded-lg mb-4 flex items-center justify-center overflow-hidden">
+              {% if solution.icon and solution.icon %}
+                {{ solution.icon | safe }}
+              {% else %}
+                <svg class="w-16 h-16 text-blue-400 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                </svg>
+              {% endif %}
+            </div>
+            <h3 class="text-lg font-bold mb-2 group-hover:text-primary transition-colors">{{ solution.name }}</h3>
+            <p class="text-secondary text-sm">{{ solution.description }}</p>
+          </a>
+        {% endfor %}
+      </div>
+    {% else %}
+      <!-- 默认行业解决方案展示 -->
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <a href="/contact" class="card-tech group overflow-hidden" data-aos="fade-up">
+          <div class="aspect-video bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg mb-4 flex items-center justify-center overflow-hidden">
+            <svg class="w-16 h-16 text-blue-400 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+            </svg>
+          </div>
+          <h3 class="text-lg font-bold mb-2 group-hover:text-primary transition-colors">金融科技</h3>
+          <p class="text-secondary text-sm">核心系统升级、移动银行、风控系统、数据分析平台</p>
+        </a>
+
+        <a href="/contact" class="card-tech group overflow-hidden" data-aos="fade-up" data-aos-delay="100">
+          <div class="aspect-video bg-gradient-to-br from-green-100 to-green-200 rounded-lg mb-4 flex items-center justify-center overflow-hidden">
+            <svg class="w-16 h-16 text-green-400 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+            </svg>
+          </div>
+          <h3 class="text-lg font-bold mb-2 group-hover:text-primary transition-colors">医疗健康</h3>
+          <p class="text-secondary text-sm">HIS 系统、电子病历、远程医疗、智慧医院解决方案</p>
+        </a>
+
+        <a href="/contact" class="card-tech group overflow-hidden" data-aos="fade-up" data-aos-delay="200">
+          <div class="aspect-video bg-gradient-to-br from-orange-100 to-orange-200 rounded-lg mb-4 flex items-center justify-center overflow-hidden">
+            <svg class="w-16 h-16 text-orange-400 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+            </svg>
+          </div>
+          <h3 class="text-lg font-bold mb-2 group-hover:text-primary transition-colors">零售电商</h3>
+          <p class="text-secondary text-sm">全渠道零售、会员管理、库存系统、数据驱动运营</p>
+        </a>
+
+        <a href="/contact" class="card-tech group overflow-hidden" data-aos="fade-up" data-aos-delay="300">
+          <div class="aspect-video bg-gradient-to-br from-purple-100 to-purple-200 rounded-lg mb-4 flex items-center justify-center overflow-hidden">
+            <svg class="w-16 h-16 text-purple-400 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+            </svg>
+          </div>
+          <h3 class="text-lg font-bold mb-2 group-hover:text-primary transition-colors">教育培训</h3>
+          <p class="text-secondary text-sm">在线教育平台、学习管理系统、智慧校园建设</p>
+        </a>
+
+        <a href="/contact" class="card-tech group overflow-hidden" data-aos="fade-up" data-aos-delay="400">
+          <div class="aspect-video bg-gradient-to-br from-red-100 to-red-200 rounded-lg mb-4 flex items-center justify-center overflow-hidden">
+            <svg class="w-16 h-16 text-red-400 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+            </svg>
+          </div>
+          <h3 class="text-lg font-bold mb-2 group-hover:text-primary transition-colors">智能制造</h3>
+          <p class="text-secondary text-sm">MES 系统、设备物联、生产调度、质量追溯</p>
+        </a>
+
+        <a href="/contact" class="card-tech group overflow-hidden" data-aos="fade-up" data-aos-delay="500">
+          <div class="aspect-video bg-gradient-to-br from-cyan-100 to-cyan-200 rounded-lg mb-4 flex items-center justify-center overflow-hidden">
+            <svg class="w-16 h-16 text-cyan-400 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"></path>
+            </svg>
+          </div>
+          <h3 class="text-lg font-bold mb-2 group-hover:text-primary transition-colors">政企服务</h3>
+          <p class="text-secondary text-sm">政务系统、OA 办公、审批流程、数据治理平台</p>
+        </a>
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<!-- 最新新闻/博客 -->
+{% if latest_articles and latest_articles | length > 0 %}
+<section class="section">
+  <div class="container-custom">
+    <!-- 标题 -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between mb-12">
+      <div>
+        <h2 class="section-title text-left mb-2" data-aos="fade-up">新闻动态</h2>
+        <p class="text-secondary" data-aos="fade-up" data-aos-delay="100">
+          了解我们的最新动态和行业资讯
+        </p>
+      </div>
+      <a href="/articles" class="btn-link mt-4 md:mt-0" data-aos="fade-up" data-aos-delay="200">
+        查看全部文章
+      </a>
+    </div>
+
+    <!-- 文章列表 -->
+    <div class="grid-cards">
+      {% for article in latest_articles %}
+        {% include "components/article-card.html" %}
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- 合作伙伴 -->
+<section class="section bg-secondary">
+  <div class="container-custom">
+    <div class="text-center mb-12">
+      <h2 class="section-title" data-aos="fade-up">合作伙伴</h2>
+      <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100">
+        我们与众多知名企业建立了长期合作关系
+      </p>
+    </div>
+
+    {% if partners and partners | length > 0 %}
+      <div class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-8 items-center">
+        {% for partner in partners %}
+          <div class="flex items-center justify-center p-4 grayscale hover:grayscale-0 transition-all duration-300" data-aos="fade-up" data-aos-delay="{{ forloop.Counter0 * 50 }}">
+            {% if partner.logo and partner.logo %}
+              <img src="{{ partner.logo }}" alt="{{ partner.name }}" class="max-h-12 w-auto">
+            {% else %}
+              <span class="text-secondary font-medium text-center">{{ partner.name }}</span>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <!-- 默认合作伙伴占位展示 -->
+      <div class="grid grid-cols-3 md:grid-cols-6 gap-8">
+        <div class="aspect-[3/2] bg-white rounded-xl flex items-center justify-center grayscale hover:grayscale-0 transition-all duration-300 shadow-sm" data-aos="fade-up">
+          <div class="text-center p-4">
+            <div class="w-12 h-12 mx-auto mb-2 rounded-full bg-blue-100 flex items-center justify-center">
+              <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+              </svg>
+            </div>
+            <span class="text-xs text-tertiary">科技企业</span>
+          </div>
+        </div>
+
+        <div class="aspect-[3/2] bg-white rounded-xl flex items-center justify-center grayscale hover:grayscale-0 transition-all duration-300 shadow-sm" data-aos="fade-up" data-aos-delay="50">
+          <div class="text-center p-4">
+            <div class="w-12 h-12 mx-auto mb-2 rounded-full bg-green-100 flex items-center justify-center">
+              <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+              </svg>
+            </div>
+            <span class="text-xs text-tertiary">医疗机构</span>
+          </div>
+        </div>
+
+        <div class="aspect-[3/2] bg-white rounded-xl flex items-center justify-center grayscale hover:grayscale-0 transition-all duration-300 shadow-sm" data-aos="fade-up" data-aos-delay="100">
+          <div class="text-center p-4">
+            <div class="w-12 h-12 mx-auto mb-2 rounded-full bg-orange-100 flex items-center justify-center">
+              <svg class="w-6 h-6 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+              </svg>
+            </div>
+            <span class="text-xs text-tertiary">零售集团</span>
+          </div>
+        </div>
+
+        <div class="aspect-[3/2] bg-white rounded-xl flex items-center justify-center grayscale hover:grayscale-0 transition-all duration-300 shadow-sm" data-aos="fade-up" data-aos-delay="150">
+          <div class="text-center p-4">
+            <div class="w-12 h-12 mx-auto mb-2 rounded-full bg-purple-100 flex items-center justify-center">
+              <svg class="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+              </svg>
+            </div>
+            <span class="text-xs text-tertiary">教育机构</span>
+          </div>
+        </div>
+
+        <div class="aspect-[3/2] bg-white rounded-xl flex items-center justify-center grayscale hover:grayscale-0 transition-all duration-300 shadow-sm" data-aos="fade-up" data-aos-delay="200">
+          <div class="text-center p-4">
+            <div class="w-12 h-12 mx-auto mb-2 rounded-full bg-red-100 flex items-center justify-center">
+              <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+              </svg>
+            </div>
+            <span class="text-xs text-tertiary">制造企业</span>
+          </div>
+        </div>
+
+        <div class="aspect-[3/2] bg-white rounded-xl flex items-center justify-center grayscale hover:grayscale-0 transition-all duration-300 shadow-sm" data-aos="fade-up" data-aos-delay="250">
+          <div class="text-center p-4">
+            <div class="w-12 h-12 mx-auto mb-2 rounded-full bg-cyan-100 flex items-center justify-center">
+              <svg class="w-6 h-6 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"></path>
+              </svg>
+            </div>
+            <span class="text-xs text-tertiary">政府机关</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-center mt-8" data-aos="fade-up">
+        <p class="text-tertiary text-sm">以及更多优秀企业客户...</p>
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<!-- CTA 区域 -->
+<section class="relative py-20 overflow-hidden">
+  <!-- 背景 -->
+  <div class="absolute inset-0 bg-gradient-to-br from-primary-dark via-primary to-primary-light">
+    <div class="absolute inset-0 bg-grid opacity-10"></div>
+  </div>
+
+  <!-- 内容 -->
+  <div class="relative z-10 container-custom text-center">
+    <h2 class="text-3xl md:text-4xl font-bold text-white mb-4" data-aos="fade-up">
+      准备好开启您的数字化之旅了吗？
+    </h2>
+    <p class="text-xl text-white/80 mb-8 max-w-2xl mx-auto" data-aos="fade-up" data-aos-delay="100">
+      联系我们，让我们一起探讨如何用技术为您的业务赋能
+    </p>
+    <div class="flex flex-wrap justify-center gap-4" data-aos="fade-up" data-aos-delay="200">
+      <a href="/contact" class="btn btn-lg bg-white text-primary hover:bg-gray-100">
+        免费咨询
+      </a>
+      <a href="tel:{{ company.phone |default:'' }}" class="btn btn-lg btn-outline-light">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+        </svg>
+        {{ company.phone |default:"联系电话" }}
+      </a>
+    </div>
+  </div>
+</section>
+{% endblock %}

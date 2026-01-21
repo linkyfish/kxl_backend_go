@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="min-h-[80vh] flex items-center justify-center py-12">
+  <div class="w-full max-w-md px-4">
+    <div class="card-tech" data-aos="fade-up">
+      <!-- 标题 -->
+      <div class="text-center mb-8">
+        <a href="/" class="inline-block mb-4">
+          {% if company.logo %}
+            <img src="{{ company.logo }}" alt="{{ company.name }}" class="h-10 mx-auto">
+          {% else %}
+            <span class="text-2xl font-bold text-primary">{{ company.name |default:"企业官网" }}</span>
+          {% endif %}
+        </a>
+        <h1 class="text-2xl font-bold">登录账号</h1>
+        <p class="text-secondary mt-2">欢迎回来，请登录您的账号</p>
+      </div>
+
+      <!-- 错误信息 -->
+      {% if error and error %}
+        <div class="bg-red-50 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm">
+          {{ error }}
+        </div>
+      {% endif %}
+
+      <!-- 登录表单 -->
+      <form action="/login" method="POST" class="space-y-6">
+        <div class="form-group">
+          <label for="username" class="form-label">用户名 / 邮箱</label>
+          <input
+            type="text"
+            id="username"
+            name="username"
+            value="{{ username |default:'' }}"
+            required
+            class="form-input"
+            placeholder="请输入用户名或邮箱"
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="password" class="form-label">密码</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            required
+            class="form-input"
+            placeholder="请输入密码"
+          >
+        </div>
+
+        <div class="flex items-center justify-between">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" name="remember" class="form-checkbox">
+            <span class="text-sm text-secondary">记住登录状态</span>
+          </label>
+          <a href="/forgot-password" class="text-sm text-primary hover:underline">忘记密码？</a>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-full">
+          登录
+        </button>
+      </form>
+
+      <!-- 注册链接 -->
+      <p class="text-center text-secondary mt-6">
+        还没有账号？
+        <a href="/register" class="text-primary hover:underline font-medium">立即注册</a>
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

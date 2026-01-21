@@ -1,0 +1,46 @@
+<!-- 团队成员卡片组件 -->
+{# 使用方式: include "components/team-card.html" #}
+<!-- 需要传入变量: member -->
+<div class="card-team" data-aos="fade-up" data-aos-delay="{{ forloop.Counter0 * 100 |default:0 }}">
+  <!-- 头像 -->
+  <div class="card-team-avatar">
+    {% if member.avatar %}
+      <img src="{{ member.avatar }}" alt="{{ member.name }}">
+    {% else %}
+      <div class="w-full h-full bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center text-2xl font-bold text-primary">
+        {{ member.name | first | upper }}
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- 姓名 -->
+  <h3 class="card-team-name">{{ member.name }}</h3>
+
+  <!-- 职位 -->
+  <p class="card-team-role">{{ member.role |default:member.position }}</p>
+
+  <!-- 简介 -->
+  {% if member.bio %}
+    <p class="card-team-bio">{{ member.bio }}</p>
+  {% endif %}
+
+  <!-- 社交链接 -->
+  {% if member.social_links %}
+    <div class="flex justify-center gap-3 mt-4">
+      {% if member.social_links.email %}
+        <a href="mailto:{{ member.social_links.email }}" class="text-tertiary hover:text-primary transition-colors" aria-label="邮箱">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+          </svg>
+        </a>
+      {% endif %}
+      {% if member.social_links.linkedin %}
+        <a href="{{ member.social_links.linkedin }}" target="_blank" rel="noopener" class="text-tertiary hover:text-primary transition-colors" aria-label="LinkedIn">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+          </svg>
+        </a>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>

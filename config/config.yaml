@@ -1,0 +1,47 @@
+app:
+  env: development
+  debug: true
+
+server:
+  host: 0.0.0.0
+  port: 8787
+
+database:
+  url: postgres://postgres:postgres@127.0.0.1:5432/kxl
+  host: 127.0.0.1
+  port: 5432
+  name: kxl
+  username: postgres
+  password: postgres
+  max_connections: 10
+
+redis:
+  url: redis://127.0.0.1:6379
+  host: 127.0.0.1
+  port: 6379
+  password: ""
+  db: 0
+
+session:
+  user_cookie_name: kxl_user_session
+  admin_cookie_name: kxl_admin_session
+  cookie_secure: false
+  prefix: kxl_session:
+  user_ttl_seconds: 604800
+  admin_ttl_seconds: 7200
+
+security:
+  rate_limit_login_window_seconds: 60
+  rate_limit_login_max_attempts: 20
+  rate_limit_upload_window_seconds: 60
+  rate_limit_upload_max_requests: 30
+  rbac_cache_ttl_seconds: 300
+
+uploads:
+  dir: uploads
+  image_max_bytes: 10485760
+  video_max_bytes: 524288000
+
+cors:
+  allow_origin: "*"
+
