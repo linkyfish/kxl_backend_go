@@ -263,6 +263,7 @@ check_secrets_reminder() {
     echo -e "  ${YELLOW}GO_DEPLOY_PORT${NC}     = 22 (或您的 SSH 端口)"
     echo -e "  ${YELLOW}GO_DEPLOY_USER${NC}     = (SSH 用户名)"
     echo -e "  ${YELLOW}GO_DEPLOY_PASSWORD${NC} = (SSH 密码)"
+    echo -e "  ${YELLOW}GO_DEPLOY_ENV${NC}      = (服务 .env 内容，支持多行，会被写入 /www/web_project/configs/kxl_backend_go.env)"
     echo
     print_info "提示：如需与 PHP/Rust 后端并行部署，可在服务器的 .env 中设置不同的 SERVER_PORT"
     echo

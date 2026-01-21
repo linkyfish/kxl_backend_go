@@ -98,6 +98,7 @@ jobs:
           SSH_PORT: ${{ secrets.GO_DEPLOY_PORT }}
           SSH_USER: ${{ secrets.GO_DEPLOY_USER }}
           SSH_PASSWORD: ${{ secrets.GO_DEPLOY_PASSWORD }}
+          GO_DEPLOY_ENV: ${{ secrets.GO_DEPLOY_ENV }}
           SKIP_HEALTH_CHECK: ${{ github.event.inputs.skip_health_check || 'false' }}
         run: |
           set -euo pipefail
@@ -105,20 +106,40 @@ jobs:
           : "${SSH_HOST:?Missing secrets.GO_DEPLOY_HOST}"
           : "${SSH_USER:?Missing secrets.GO_DEPLOY_USER}"
           : "${SSH_PASSWORD:?Missing secrets.GO_DEPLOY_PASSWORD}"
+          : "${GO_DEPLOY_ENV:?Missing secrets.GO_DEPLOY_ENV}"
           SSH_PORT="${SSH_PORT:-22}"
 
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
           ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
 
-          echo "[Step 1] Uploading package to server..."
+          echo "[Step 1] Creating env file from secret..."
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+
+          content = os.environ.get("GO_DEPLOY_ENV", "")
+          Path("kxl_backend_go.env").write_text(content)
+          PY
+          chmod 600 kxl_backend_go.env
+
+          echo "[Step 2] Uploading env file to server..."
+          sshpass -p "$SSH_PASSWORD" scp \
+            -P "$SSH_PORT" \
+            -o StrictHostKeyChecking=no \
+            kxl_backend_go.env \
+            "$SSH_USER@$SSH_HOST:/tmp/kxl_backend_go.env"
+
+          rm -f kxl_backend_go.env
+
+          echo "[Step 3] Uploading package to server..."
           sshpass -p "$SSH_PASSWORD" scp \
             -P "$SSH_PORT" \
             -o StrictHostKeyChecking=no \
             kxl_backend_go.tar.gz \
             "$SSH_USER@$SSH_HOST:$REMOTE_TAR"
 
-          echo "[Step 2] Executing deployment on server..."
+          echo "[Step 4] Executing deployment on server..."
           sshpass -p "$SSH_PASSWORD" ssh \
             -p "$SSH_PORT" \
             -o StrictHostKeyChecking=no \
@@ -146,6 +167,14 @@ jobs:
           echo "=========================================="
           echo "Go Backend deployment started at $(date)"
           echo "=========================================="
+
+          # 应用本次工作流上传的 env 文件（以 secrets 为准），落盘到持久化目录供后续部署复用
+          if [[ -f /tmp/kxl_backend_go.env ]]; then
+            cp /tmp/kxl_backend_go.env "$PERSISTENT_ENV"
+            chmod 600 "$PERSISTENT_ENV" 2>/dev/null || true
+            rm -f /tmp/kxl_backend_go.env
+            echo "Env file updated: $PERSISTENT_ENV"
+          fi
 
           # 从 .env / 持久化 env 里读取端口（用于 stop/health check）
           PORT="8787"
