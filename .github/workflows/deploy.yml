@@ -98,7 +98,6 @@ jobs:
           SSH_PORT: ${{ secrets.GO_DEPLOY_PORT }}
           SSH_USER: ${{ secrets.GO_DEPLOY_USER }}
           SSH_PASSWORD: ${{ secrets.GO_DEPLOY_PASSWORD }}
-          GO_DEPLOY_ENV: ${{ secrets.GO_DEPLOY_ENV }}
           SKIP_HEALTH_CHECK: ${{ github.event.inputs.skip_health_check || 'false' }}
         run: |
           set -euo pipefail
@@ -106,40 +105,20 @@ jobs:
           : "${SSH_HOST:?Missing secrets.GO_DEPLOY_HOST}"
           : "${SSH_USER:?Missing secrets.GO_DEPLOY_USER}"
           : "${SSH_PASSWORD:?Missing secrets.GO_DEPLOY_PASSWORD}"
-          : "${GO_DEPLOY_ENV:?Missing secrets.GO_DEPLOY_ENV}"
           SSH_PORT="${SSH_PORT:-22}"
 
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
           ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
 
-          echo "[Step 1] Creating env file from secret..."
-          python3 - <<'PY'
-          import os
-          from pathlib import Path
-
-          content = os.environ.get("GO_DEPLOY_ENV", "")
-          Path("kxl_backend_go.env").write_text(content)
-          PY
-          chmod 600 kxl_backend_go.env
-
-          echo "[Step 2] Uploading env file to server..."
-          sshpass -p "$SSH_PASSWORD" scp \
-            -P "$SSH_PORT" \
-            -o StrictHostKeyChecking=no \
-            kxl_backend_go.env \
-            "$SSH_USER@$SSH_HOST:/tmp/kxl_backend_go.env"
-
-          rm -f kxl_backend_go.env
-
-          echo "[Step 3] Uploading package to server..."
+          echo "[Step 1] Uploading package to server..."
           sshpass -p "$SSH_PASSWORD" scp \
             -P "$SSH_PORT" \
             -o StrictHostKeyChecking=no \
             kxl_backend_go.tar.gz \
             "$SSH_USER@$SSH_HOST:$REMOTE_TAR"
 
-          echo "[Step 4] Executing deployment on server..."
+          echo "[Step 2] Executing deployment on server..."
           sshpass -p "$SSH_PASSWORD" ssh \
             -p "$SSH_PORT" \
             -o StrictHostKeyChecking=no \
@@ -152,6 +131,7 @@ jobs:
           BACKUP_DIR="/www/web_project/backups/kxl_backend_go"
           LOG_DIR="/www/web_project/logs"
           PERSISTENT_CONFIG_DIR="/www/web_project/configs"
+          PHP_ENV="$PERSISTENT_CONFIG_DIR/kxl_backend_php.env"
           PERSISTENT_ENV="$PERSISTENT_CONFIG_DIR/kxl_backend_go.env"
           PID_FILE="$REMOTE_DIR/kxl_backend_go.pid"
 
@@ -168,12 +148,32 @@ jobs:
           echo "Go Backend deployment started at $(date)"
           echo "=========================================="
 
-          # 应用本次工作流上传的 env 文件（以 secrets 为准），落盘到持久化目录供后续部署复用
-          if [[ -f /tmp/kxl_backend_go.env ]]; then
-            cp /tmp/kxl_backend_go.env "$PERSISTENT_ENV"
-            chmod 600 "$PERSISTENT_ENV" 2>/dev/null || true
-            rm -f /tmp/kxl_backend_go.env
-            echo "Env file updated: $PERSISTENT_ENV"
+          # 环境配置：优先使用 Go 自己的持久化 env；否则直接复用 PHP 的 env
+          if [[ ! -f "$PERSISTENT_ENV" ]]; then
+            if [[ -f "$PHP_ENV" ]]; then
+              cp "$PHP_ENV" "$PERSISTENT_ENV"
+              chmod 600 "$PERSISTENT_ENV" 2>/dev/null || true
+              echo "Env file created from PHP env: $PHP_ENV -> $PERSISTENT_ENV"
+            else
+              echo "FATAL: No env file found."
+              echo "Please create: $PERSISTENT_ENV"
+              echo "Or ensure PHP env exists: $PHP_ENV"
+              exit 1
+            fi
+          else
+            echo "Env file found: $PERSISTENT_ENV"
+          fi
+
+          # 避免与 PHP(常用 8787) 冲突：如果 Go env 里端口是 8787，则自动改为 8788
+          CURRENT_PORT="$(grep -E '^SERVER_PORT=' "$PERSISTENT_ENV" 2>/dev/null | tail -1 | cut -d= -f2- | tr -d '\r' || true)"
+          if [[ "$CURRENT_PORT" == "8787" ]]; then
+            if command -v sed >/dev/null 2>&1; then
+              sed -i 's/^SERVER_PORT=.*/SERVER_PORT=8788/' "$PERSISTENT_ENV"
+            else
+              # Fallback: append; later parsing uses the last match (tail -1)
+              echo "SERVER_PORT=8788" >> "$PERSISTENT_ENV"
+            fi
+            echo "Adjusted SERVER_PORT from 8787 to 8788 in $PERSISTENT_ENV"
           fi
 
           # 从 .env / 持久化 env 里读取端口（用于 stop/health check）
