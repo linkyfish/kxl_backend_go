@@ -19,6 +19,9 @@ NC='\033[0m' # No Color
 TAG_PREFIX="go-"
 REMOTE_SERVER="154.53.61.227"
 DEPLOY_PATH="/www/web_project/server/kxl_backend_go"
+WORKFLOW_FILE="deploy.yml"
+# 默认等待 GitHub Actions 部署结束（包含健康检查）；如需跳过可执行：DEPLOY_WAIT=false bash scripts/deploy.sh
+DEPLOY_WAIT="${DEPLOY_WAIT:-true}"
 
 # 获取脚本所在目录的父目录（项目根目录）
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -45,6 +48,90 @@ print_warning() {
 
 print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
+}
+
+# 检查 gh CLI 是否可用且已登录
+require_gh() {
+    if ! command -v gh >/dev/null 2>&1; then
+        print_error "未检测到 GitHub CLI(gh)，无法自动等待部署结果"
+        print_info "请先安装并登录 gh（gh auth login），或设置 DEPLOY_WAIT=false 跳过等待"
+        return 1
+    fi
+
+    if ! gh auth status -h github.com >/dev/null 2>&1; then
+        print_error "gh 未登录，无法自动等待部署结果"
+        print_info "请先执行：gh auth login（确保对仓库有权限），或设置 DEPLOY_WAIT=false 跳过等待"
+        return 1
+    fi
+
+    return 0
+}
+
+# 等待对应的部署工作流出现并完成：只有健康检查通过（workflow 成功）才算部署成功
+wait_for_deploy_result() {
+    local tag="$1"
+
+    if [[ "$DEPLOY_WAIT" != "true" ]]; then
+        print_warning "DEPLOY_WAIT=false：跳过等待部署结果"
+        return 0
+    fi
+
+    require_gh
+
+    cd "$PROJECT_ROOT"
+
+    local sha
+    sha="$(git rev-list -n 1 "$tag")"
+
+    print_header "等待部署完成（需健康检查通过）"
+    print_info "tag=$tag"
+    print_info "sha=$sha"
+
+    # 等待 workflow run 出现在列表里（GitHub 可能有延迟）
+    local run_id=""
+    local max_tries=40
+    local sleep_seconds=3
+    for i in $(seq 1 "$max_tries"); do
+        run_id="$(
+            gh run list \
+                --workflow "$WORKFLOW_FILE" \
+                --event push \
+                --limit 20 \
+                --json databaseId,headBranch,headSha \
+                --jq ".[] | select((.headBranch==\"$tag\") or (.headSha==\"$sha\")) | .databaseId" 2>/dev/null \
+                | head -n1 || true
+        )"
+        if [[ -n "${run_id:-}" ]]; then
+            break
+        fi
+        print_info "等待 GitHub Actions 工作流启动... ($i/$max_tries)"
+        sleep "$sleep_seconds"
+    done
+
+    if [[ -z "${run_id:-}" ]]; then
+        print_error "未找到对应的 GitHub Actions 运行记录，无法确认部署是否成功"
+        print_info "请前往 Actions 查看：https://github.com/linkyfish/kxl_backend_go/actions"
+        return 1
+    fi
+
+    local url=""
+    url="$(gh run view "$run_id" --json htmlUrl --jq '.htmlUrl' 2>/dev/null || true)"
+    if [[ -n "${url:-}" ]]; then
+        print_info "工作流链接: $url"
+    fi
+
+    print_info "等待工作流执行完成..."
+    if gh run watch "$run_id" --exit-status --interval 5; then
+        print_success "部署成功：健康检查已通过"
+        return 0
+    fi
+
+    print_error "部署失败：健康检查未通过或工作流执行失败"
+    if [[ -n "${url:-}" ]]; then
+        print_info "请查看工作流详情: $url"
+    fi
+    gh run view "$run_id" --log-failed 2>/dev/null || true
+    return 1
 }
 
 # 检查是否在正确的目录
@@ -248,8 +335,8 @@ show_deployment_info() {
     echo -e "目标服务器:      ${GREEN}$REMOTE_SERVER${NC}"
     echo -e "部署路径:        ${GREEN}$DEPLOY_PATH${NC}"
     echo
-    print_info "GitHub Actions 工作流将自动触发部署"
-    print_info "请前往 GitHub 仓库的 Actions 页面查看部署进度"
+    print_info "GitHub Actions 工作流将自动触发部署（包含启动后的健康检查）"
+    print_info "本脚本会等待工作流完成：只有健康检查通过才算部署成功"
     echo
 }
 
@@ -361,6 +448,7 @@ deploy_new_version() {
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         create_and_push_tag "$tag" "$message"
         show_deployment_info "$tag"
+        wait_for_deploy_result "$tag"
     else
         print_info "部署已取消"
     fi
@@ -408,6 +496,7 @@ trigger_existing_tag() {
         git push origin "$tag"
 
         print_success "Tag '$tag' 已重新推送，部署工作流将触发"
+        wait_for_deploy_result "$tag"
     else
         print_info "操作已取消"
         print_info "您可以访问 GitHub Actions 页面手动触发部署"
