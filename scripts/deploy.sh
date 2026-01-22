@@ -264,9 +264,8 @@ check_secrets_reminder() {
     echo -e "  ${YELLOW}GO_DEPLOY_USER${NC}     = (SSH 用户名)"
     echo -e "  ${YELLOW}GO_DEPLOY_PASSWORD${NC} = (SSH 密码)"
     echo
-    print_info "提示：工作流默认复用服务器上的 /www/web_project/configs/kxl_backend_php.env"
-    print_info "如需 Go 单独配置，可在服务器创建 /www/web_project/configs/kxl_backend_go.env（优先生效）"
-    print_info "如需与 PHP/Rust 后端并行部署，请确保 Go 的 SERVER_PORT 不与其它服务冲突（默认会把 8787 自动调整为 8788）"
+    print_info "提示：工作流使用服务器上的 /www/web_project/configs/kxl_backend_go.env 作为配置来源"
+    print_info "如需与其它后端并行部署，请确保 Go 的 SERVER_PORT 不与其它服务冲突（例如使用 8788）"
     echo
 }
 

@@ -131,7 +131,6 @@ jobs:
           BACKUP_DIR="/www/web_project/backups/kxl_backend_go"
           LOG_DIR="/www/web_project/logs"
           PERSISTENT_CONFIG_DIR="/www/web_project/configs"
-          PHP_ENV="$PERSISTENT_CONFIG_DIR/kxl_backend_php.env"
           PERSISTENT_ENV="$PERSISTENT_CONFIG_DIR/kxl_backend_go.env"
           PID_FILE="$REMOTE_DIR/kxl_backend_go.pid"
 
@@ -148,41 +147,35 @@ jobs:
           echo "Go Backend deployment started at $(date)"
           echo "=========================================="
 
-          # 环境配置：优先使用 Go 自己的持久化 env；否则直接复用 PHP 的 env
-          if [[ ! -f "$PERSISTENT_ENV" ]]; then
-            if [[ -f "$PHP_ENV" ]]; then
-              cp "$PHP_ENV" "$PERSISTENT_ENV"
-              chmod 600 "$PERSISTENT_ENV" 2>/dev/null || true
-              echo "Env file created from PHP env: $PHP_ENV -> $PERSISTENT_ENV"
-            else
-              echo "FATAL: No env file found."
-              echo "Please create: $PERSISTENT_ENV"
-              echo "Or ensure PHP env exists: $PHP_ENV"
-              exit 1
-            fi
-          else
+          # 环境配置：使用 Go 自己的配置文件（不依赖 GitHub secrets，不复用 PHP 配置）。
+          # 你需要在服务器上提前创建该文件：
+          #   /www/web_project/configs/kxl_backend_go.env
+          # 如果不存在，但 $REMOTE_DIR/.env 已存在（手工创建过），则会自动将其持久化到 $PERSISTENT_ENV。
+          if [[ -f "$PERSISTENT_ENV" ]]; then
             echo "Env file found: $PERSISTENT_ENV"
+          elif [[ -f "$REMOTE_DIR/.env" ]]; then
+            cp "$REMOTE_DIR/.env" "$PERSISTENT_ENV"
+            chmod 600 "$PERSISTENT_ENV" 2>/dev/null || true
+            echo "Env file created from existing app .env: $REMOTE_DIR/.env -> $PERSISTENT_ENV"
+          else
+            echo "FATAL: Go env not found: $PERSISTENT_ENV"
+            echo "Please create it on the server before deploying."
+            exit 1
           fi
 
-          # 避免与 PHP(常用 8787) 冲突：如果 Go env 里端口是 8787，则自动改为 8788
+          # 如果 SERVER_PORT=8787，通常会与 PHP(Webman) 冲突；这里不自动改写配置，仅提示。
           CURRENT_PORT="$(grep -E '^SERVER_PORT=' "$PERSISTENT_ENV" 2>/dev/null | tail -1 | cut -d= -f2- | tr -d '\r' || true)"
           if [[ "$CURRENT_PORT" == "8787" ]]; then
-            if command -v sed >/dev/null 2>&1; then
-              sed -i 's/^SERVER_PORT=.*/SERVER_PORT=8788/' "$PERSISTENT_ENV"
-            else
-              # Fallback: append; later parsing uses the last match (tail -1)
-              echo "SERVER_PORT=8788" >> "$PERSISTENT_ENV"
-            fi
-            echo "Adjusted SERVER_PORT from 8787 to 8788 in $PERSISTENT_ENV"
+            echo "WARNING: SERVER_PORT=8787 may conflict with other services. Consider changing it in: $PERSISTENT_ENV"
           fi
 
           # 从 .env / 持久化 env 里读取端口（用于 stop/health check）
           PORT="8787"
-          if [[ -f "$REMOTE_DIR/.env" ]]; then
-            p=$(grep -E '^SERVER_PORT=' "$REMOTE_DIR/.env" 2>/dev/null | tail -1 | cut -d= -f2- | tr -d '\r' || true)
-            [[ -n "${p:-}" ]] && PORT="$p"
-          elif [[ -f "$PERSISTENT_ENV" ]]; then
+          if [[ -f "$PERSISTENT_ENV" ]]; then
             p=$(grep -E '^SERVER_PORT=' "$PERSISTENT_ENV" 2>/dev/null | tail -1 | cut -d= -f2- | tr -d '\r' || true)
+            [[ -n "${p:-}" ]] && PORT="$p"
+          elif [[ -f "$REMOTE_DIR/.env" ]]; then
+            p=$(grep -E '^SERVER_PORT=' "$REMOTE_DIR/.env" 2>/dev/null | tail -1 | cut -d= -f2- | tr -d '\r' || true)
             [[ -n "${p:-}" ]] && PORT="$p"
           fi
 
@@ -327,6 +320,11 @@ jobs:
           [[ -n "${p:-}" ]] && PORT="$p"
 
           cd "$REMOTE_DIR"
+          # Rotate app log to avoid mixing multiple deployments in one file.
+          if [[ -f "$APP_LOG" ]]; then
+            mv "$APP_LOG" "$LOG_DIR/kxl_backend_go_app_${TIMESTAMP}.log" 2>/dev/null || true
+          fi
+          : > "$APP_LOG"
           nohup ./kxl-api >> "$APP_LOG" 2>&1 &
           NEW_PID=$!
           echo "$NEW_PID" > "$PID_FILE"
